@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Certificate Details</title>
+<style>
+body { font-family: Arial; background:#f0f0f0; display:flex; justify-content:center; align-items:center; min-height:100vh; }
+.card { background:#fff; padding:30px; border-radius:12px; box-shadow:0 4px 10px rgba(0,0,0,0.2); max-width:500px; width:100%; }
+h1 { text-align:center; font-size:24px; margin-bottom:15px; }
+p { margin:5px 0; font-size:16px; }
+.status { font-weight:bold; color: green; }
+.denied { color: red; }
+a { display:block; margin-top:20px; text-align:center; padding:10px; background:#0070f3; color:#fff; text-decoration:none; border-radius:8px; }
+.signature { font-weight:bold; font-style:italic; margin-top:15px; text-align:right; font-size:12px; }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>Certificate Details</h1>
+  <p><strong>APAAR ID:</strong> {{ user.apaarID }}</p>
+  <p><strong>Name:</strong> {{ user.name }}</p>
+  <p><strong>Email:</strong> {{ user.email }}</p>
+  <p><strong>Certificate:</strong> {{ cert.name }}</p>
+  <p class="status"><strong>Status:</strong> 
+     <span class="{{ '' if cert.isApproved else 'denied' }}">{{ 'Approved' if cert.isApproved else 'Denied' }}</span>
+  </p>
+  <p><strong>Approver:</strong> {{ cert.approverName }}</p>
+  <p><strong>Approval Date:</strong> {{ cert.approvalDate }}</p>
+  <a href="/pdf/{{ user.apaarID }}/{{ cert.certificateId }}" target="_blank">Download PDF</a>
+  <p class="signature">{{ signature }}</p>
+</div>
+</body>
+</html>
