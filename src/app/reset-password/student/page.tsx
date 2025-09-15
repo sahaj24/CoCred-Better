@@ -4,6 +4,7 @@ import { StudentResetPasswordForm } from "@/components/auth/student-reset-passwo
 import { GraduationCap } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { Suspense } from "react";
 
 export default function StudentResetPasswordPage() {
   return (
@@ -16,7 +17,9 @@ export default function StudentResetPasswordPage() {
           <CardTitle className="font-headline text-3xl">Reset Password</CardTitle>
           <CardDescription>Enter the code and your new password.</CardDescription>
         </CardHeader>
-        <StudentResetPasswordForm />
+        <Suspense fallback={<div className="p-6">Loading...</div>}>
+          <StudentResetPasswordForm />
+        </Suspense>
       </Card>
     </main>
   );
