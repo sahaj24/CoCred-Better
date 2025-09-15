@@ -23,7 +23,8 @@ import {
   Search,
   Share2,
   Folder,
-  Bell
+  Bell,
+  LayoutDashboard
 } from "lucide-react";
 import { useState, useContext } from "react";
 import { LanguageContext } from "@/lib/language-context";
@@ -51,7 +52,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-type NavigationTab = "profile" | "upload" | "download" | "qr" | "share" | "settings" | "help";
+type NavigationTab = "profile" | "dashboard" | "upload" | "download" | "qr" | "share" | "settings" | "help";
 type CertificateStatus = "pending" | "approved" | "rejected";
 type CertificateType = "certificate" | "internship" | "project" | "workshop";
 
@@ -76,7 +77,7 @@ export default function StudentDashboard() {
 function StudentDashboardContent() {
   const { user, signOut } = useAuth();
   const { translations } = useContext(LanguageContext);
-  const [activeTab, setActiveTab] = useState<NavigationTab>("upload");
+  const [activeTab, setActiveTab] = useState<NavigationTab>("dashboard");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCertificates, setSelectedCertificates] = useState<string[]>([]);
 
@@ -184,6 +185,7 @@ function StudentDashboardContent() {
 
   const navigationItems = [
     { id: "profile" as NavigationTab, label: "Profile", icon: User },
+    { id: "dashboard" as NavigationTab, label: "Dashboard", icon: LayoutDashboard },
     { id: "upload" as NavigationTab, label: "Upload", icon: Upload },
     { id: "download" as NavigationTab, label: "Download", icon: Download },
     { id: "qr" as NavigationTab, label: "Generate QR", icon: QrCode },
@@ -202,10 +204,11 @@ function StudentDashboardContent() {
         <div className="flex items-center justify-between h-full">
           {/* Logo */}
           <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-r from-[#2161FF] to-blue-700 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-lg">C</span>
-            </div>
-            <span className="text-xl font-bold text-gray-900">CoCred</span>
+            <img 
+              src="/logo-blue.svg" 
+              alt="CoCred Logo" 
+              className="h-10 w-auto"
+            />
           </div>
 
           {/* Future global search bar space (optional) */}
@@ -331,7 +334,7 @@ function StudentDashboardContent() {
 
         {/* Right Content Area (74% width, responsive) */}
         <div className="flex-1 p-6 overflow-auto bg-[#F8FAFC]">
-          {activeTab === "upload" && (
+          {activeTab === "dashboard" && (
             <div className="space-y-6">
               {/* Two-Card Upload Grid */}
               <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
@@ -543,6 +546,30 @@ function StudentDashboardContent() {
             </div>
           )}
 
+          {/* Upload Tab Content */}
+          {activeTab === "upload" && (
+            <div className="space-y-6">
+              <Card className="bg-white shadow-sm hover:shadow-md transition-shadow rounded-xl border border-gray-100">
+                <CardHeader>
+                  <CardTitle className="text-xl text-gray-900">Upload Documents</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center py-8">
+                    <div className="w-16 h-16 mx-auto mb-4 bg-green-100 rounded-full flex items-center justify-center">
+                      <Upload className="h-8 w-8 text-green-600" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Upload Your Certificates</h3>
+                    <p className="text-gray-500 mb-6">Upload certificates, internships, and project documents</p>
+                    <Button className="bg-[#2161FF] hover:bg-blue-700">
+                      <Upload className="h-4 w-4 mr-2" />
+                      Start Upload
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
           {/* Download Tab Content */}
           {activeTab === "download" && (
             <div className="space-y-6">
@@ -568,7 +595,7 @@ function StudentDashboardContent() {
           )}
 
           {/* Other tab content */}
-          {activeTab !== "upload" && activeTab !== "download" && (
+          {activeTab !== "dashboard" && activeTab !== "upload" && activeTab !== "download" && (
             <div className="text-center py-12">
               <h2 className="text-2xl font-semibold text-gray-900 mb-2">
                 {[...navigationItems, ...bottomNavigationItems].find(item => item.id === activeTab)?.label}
