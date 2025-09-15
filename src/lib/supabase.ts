@@ -13,29 +13,45 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 
 // Get the correct base URL for redirects
 const getBaseUrl = () => {
-  // Always use window.location.origin in the browser for development
+  // In browser environment, use current origin
   if (typeof window !== 'undefined') {
-    console.log('Using window.location.origin:', window.location.origin);
-    return window.location.origin;
+    const origin = window.location.origin;
+    console.log('Browser detected, using window.location.origin:', origin);
+    return origin;
   }
   
-  // Server-side fallback for development
-  if (process.env.NODE_ENV === 'development') {
-    return 'http://localhost:3000';
-  }
+  // Server-side: Check environment variables in order of preference
   
-  // For Vercel deployments
-  if (process.env.NEXT_PUBLIC_VERCEL_URL) {
-    return `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`;
-  }
-  
-  // For custom domain
+  // 1. Explicit site URL (for production)
   if (process.env.NEXT_PUBLIC_SITE_URL) {
+    console.log('Using NEXT_PUBLIC_SITE_URL:', process.env.NEXT_PUBLIC_SITE_URL);
     return process.env.NEXT_PUBLIC_SITE_URL;
   }
   
-  // Production fallback
-  return 'https://co-cred-better.vercel.app';
+  // 2. Vercel URL (auto-generated)
+  if (process.env.NEXT_PUBLIC_VERCEL_URL) {
+    const url = `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`;
+    console.log('Using NEXT_PUBLIC_VERCEL_URL:', url);
+    return url;
+  }
+  
+  // 3. Vercel system environment variable
+  if (process.env.VERCEL_URL) {
+    const url = `https://${process.env.VERCEL_URL}`;
+    console.log('Using VERCEL_URL:', url);
+    return url;
+  }
+  
+  // 4. Development fallback
+  if (process.env.NODE_ENV === 'development') {
+    console.log('Development mode, using localhost');
+    return 'http://localhost:3000';
+  }
+  
+  // 5. Production fallback
+  const fallback = 'https://co-cred-better.vercel.app';
+  console.log('Using production fallback:', fallback);
+  return fallback;
 }
 
 // Google OAuth configuration with dynamic redirect
@@ -52,8 +68,10 @@ export const signInWithGoogle = async (userType: 'student' | 'teacher' | 'author
   console.log('Current Location:', typeof window !== 'undefined' ? window.location.href : 'server-side');
   console.log('Environment Variables:', {
     NODE_ENV: process.env.NODE_ENV,
-    VERCEL_URL: process.env.NEXT_PUBLIC_VERCEL_URL,
-    SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
+    VERCEL_URL: process.env.VERCEL_URL,
+    NEXT_PUBLIC_VERCEL_URL: process.env.NEXT_PUBLIC_VERCEL_URL,
+    NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
+    windowOrigin: typeof window !== 'undefined' ? window.location.origin : 'not available'
   });
   console.log('========================');
   
