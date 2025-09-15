@@ -80,7 +80,7 @@ export function AuthorityLoginForm() {
 
   const handleGoogleSignIn = async () => {
     try {
-      await signInWithGoogle();
+      await signInWithGoogle('authority');
     } catch (error) {
       toast({
         variant: "destructive",

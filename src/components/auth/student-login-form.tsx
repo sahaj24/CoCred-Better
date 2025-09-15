@@ -80,7 +80,7 @@ export function StudentLoginForm() {
 
   const handleGoogleSignIn = async () => {
     try {
-      await signInWithGoogle();
+      await signInWithGoogle('student');
     } catch (error) {
       toast({
         variant: "destructive",
