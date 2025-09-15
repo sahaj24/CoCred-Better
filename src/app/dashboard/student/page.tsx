@@ -2,11 +2,61 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { LogOut, User, FileText, Award, Briefcase, GitBranch } from "lucide-react";
-import { useContext } from "react";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import { 
+  LogOut, 
+  User, 
+  Upload, 
+  Download, 
+  QrCode, 
+  Settings,
+  HelpCircle,
+  FileText,
+  Award,
+  Briefcase,
+  GitBranch,
+  Eye,
+  Trash2,
+  Plus,
+  Search,
+  Share2,
+  Folder
+} from "lucide-react";
+import { useState, useContext } from "react";
 import { LanguageContext } from "@/lib/language-context";
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import { useAuth } from "@/lib/auth-context";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+
+type NavigationTab = "profile" | "upload" | "download" | "qr" | "share" | "settings" | "help";
+type CertificateStatus = "pending" | "approved" | "rejected";
+type CertificateType = "certificate" | "internship" | "project" | "workshop";
+
+interface Certificate {
+  id: string;
+  name: string;
+  type: CertificateType;
+  event: string;
+  status: CertificateStatus;
+  date: string;
+  selected?: boolean;
+}
 
 export default function StudentDashboard() {
   return (
@@ -19,159 +69,389 @@ export default function StudentDashboard() {
 function StudentDashboardContent() {
   const { user, signOut } = useAuth();
   const { translations } = useContext(LanguageContext);
+  const [activeTab, setActiveTab] = useState<NavigationTab>("upload");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCertificates, setSelectedCertificates] = useState<string[]>([]);
+
+  // Mock data for certificates
+  const [certificates, setCertificates] = useState<Certificate[]>([
+    {
+      id: "1",
+      name: "JavaScript Certification",
+      type: "certificate",
+      event: "Web Development Workshop",
+      status: "approved",
+      date: "2025-09-01",
+    },
+    {
+      id: "2", 
+      name: "React Fundamentals Certificate",
+      type: "certificate",
+      event: "Frontend Bootcamp",
+      status: "pending",
+      date: "2025-09-10",
+    },
+    {
+      id: "3",
+      name: "Project Management Certificate",
+      type: "workshop",
+      event: "Leadership Training",
+      status: "approved",
+      date: "2025-08-28",
+    },
+    {
+      id: "4",
+      name: "Node.js Certificate",
+      type: "certificate",
+      event: "Backend Development",
+      status: "approved",
+      date: "2025-08-25",
+    },
+    {
+      id: "5",
+      name: "Internship Completion Certificate",
+      type: "internship",
+      event: "Summer Internship 2025",
+      status: "approved",
+      date: "2025-08-20",
+    }
+  ]);
 
   const handleSignOut = async () => {
     await signOut();
   };
 
+  const getStatusBadge = (status: CertificateStatus) => {
+    const variants = {
+      pending: "bg-yellow-100 text-yellow-800 border-yellow-200",
+      approved: "bg-green-100 text-green-800 border-green-200", 
+      rejected: "bg-red-100 text-red-800 border-red-200"
+    };
+    
+    return (
+      <Badge variant="outline" className={variants[status]}>
+        {status.charAt(0).toUpperCase() + status.slice(1)}
+      </Badge>
+    );
+  };
+
+  const getDocumentIcon = (certificateType: CertificateType) => {
+    switch (certificateType) {
+      case 'certificate':
+        return <Award className="h-4 w-4 text-yellow-600" />;
+      case 'internship':
+        return <Briefcase className="h-4 w-4 text-green-600" />;
+      case 'project':
+        return <GitBranch className="h-4 w-4 text-purple-600" />;
+      case 'workshop':
+        return <FileText className="h-4 w-4 text-blue-600" />;
+      default:
+        return <FileText className="h-4 w-4 text-blue-600" />;
+    }
+  };
+
+  const handleCertificateSelect = (certificateId: string) => {
+    setSelectedCertificates(prev => 
+      prev.includes(certificateId) 
+        ? prev.filter(id => id !== certificateId)
+        : [...prev, certificateId]
+    );
+  };
+
+  const handleSelectAll = () => {
+    if (selectedCertificates.length === certificates.length) {
+      setSelectedCertificates([]);
+    } else {
+      setSelectedCertificates(certificates.map(cert => cert.id));
+    }
+  };
+
+  const filteredCertificates = certificates.filter(cert =>
+    cert.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    cert.event.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const navigationItems = [
+    { id: "profile" as NavigationTab, label: "Profile", icon: User },
+    { id: "upload" as NavigationTab, label: "Upload", icon: Upload },
+    { id: "download" as NavigationTab, label: "Download", icon: Download },
+    { id: "qr" as NavigationTab, label: "Generate QR", icon: QrCode },
+    { id: "share" as NavigationTab, label: "Share Portfolio", icon: Share2 },
+  ];
+
+  const bottomNavigationItems = [
+    { id: "help" as NavigationTab, label: "Help / FAQ", icon: HelpCircle },
+    { id: "settings" as NavigationTab, label: "Settings", icon: Settings },
+  ];
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-6">
-      {/* Background decoration */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-200/20 rounded-full blur-3xl"></div>
-        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-indigo-200/20 rounded-full blur-3xl"></div>
-      </div>
-      
-      <div className="relative w-full max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-10">
-          <div className="flex items-center space-x-6">
-            <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-2xl blur-lg opacity-75"></div>
-              <div className="relative p-4 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl shadow-xl">
-                <User className="h-8 w-8 text-white" />
-              </div>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header (64px height) */}
+      <div className="bg-white border-b border-gray-200 px-6 py-4 h-16">
+        <div className="flex items-center justify-between h-full">
+          {/* Logo */}
+          <div className="flex items-center space-x-2">
+            <div className="w-8 h-8 bg-gradient-to-r from-[#2161FF] to-blue-700 rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-lg">C</span>
             </div>
-            <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
-                Welcome back, {user?.user_metadata?.full_name || user?.email?.split('@')[0]}!
-              </h1>
-              <p className="text-gray-500 text-lg">Student Dashboard</p>
-            </div>
+            <span className="text-xl font-bold text-gray-900">CoCred</span>
           </div>
-          <Button 
-            variant="outline" 
-            onClick={handleSignOut} 
-            className="flex items-center space-x-2 border-gray-200 bg-white/80 backdrop-blur-sm hover:bg-white/90 shadow-md"
-          >
-            <LogOut className="h-4 w-4" />
-            <span>Sign Out</span>
-          </Button>
+
+          {/* Future global search bar space (optional) */}
+          <div className="flex-1 max-w-md mx-8">
+            {/* Placeholder for future global search */}
+          </div>
+            
+          {/* User Dropdown */}
+          <div className="flex items-center">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="flex items-center space-x-2">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={user?.user_metadata?.avatar_url} />
+                    <AvatarFallback className="bg-blue-100 text-blue-600 text-sm">
+                      {user?.email?.charAt(0).toUpperCase() || "U"}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="text-sm font-medium text-gray-700 max-w-32 truncate">
+                    {user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User"}
+                  </span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem onClick={() => setActiveTab("profile")}>
+                  <User className="h-4 w-4 mr-2" />
+                  Profile Settings
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleSignOut} className="text-red-600">
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Logout
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex h-[calc(100vh-64px)]">
+        {/* Left Sidebar (26% width, responsive) */}
+        <div className="w-80 lg:w-80 md:w-16 bg-white border-r border-gray-200 flex flex-col transition-all duration-300">
+          <div className="p-4 flex-1">
+            <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3 md:hidden lg:block">
+              Navigation
+            </h3>
+            <nav className="space-y-1">
+              {navigationItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = activeTab === item.id;
+                
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => setActiveTab(item.id)}
+                    className={`
+                      w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-left transition-all duration-200
+                      ${isActive 
+                        ? "bg-blue-50 text-[#2161FF] border-l-4 border-[#2161FF]" 
+                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                      }
+                    `}
+                    title={item.label}
+                  >
+                    <Icon className="h-5 w-5 flex-shrink-0" />
+                    <span className="font-medium md:hidden lg:block">{item.label}</span>
+                  </button>
+                );
+              })}
+            </nav>
+
+            {/* Spacer */}
+            <div className="my-6 border-t border-gray-200"></div>
+
+            {/* Bottom navigation items */}
+            <nav className="space-y-1">
+              {bottomNavigationItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = activeTab === item.id;
+                
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => setActiveTab(item.id)}
+                    className={`
+                      w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-left transition-all duration-200
+                      ${isActive 
+                        ? "bg-blue-50 text-[#2161FF] border-l-4 border-[#2161FF]" 
+                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                      }
+                    `}
+                    title={item.label}
+                  >
+                    <Icon className="h-5 w-5 flex-shrink-0" />
+                    <span className="font-medium md:hidden lg:block">{item.label}</span>
+                  </button>
+                );
+              })}
+            </nav>
+          </div>
+          
+          {/* Logout at bottom */}
+          <div className="p-4 border-t border-gray-200">
+            <button
+              onClick={handleSignOut}
+              className="w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-red-600 hover:bg-red-50 transition-all duration-200"
+              title="Logout"
+            >
+              <LogOut className="h-5 w-5 flex-shrink-0" />
+              <span className="font-medium md:hidden lg:block">Logout</span>
+            </button>
+          </div>
         </div>
 
-        {/* User Info Card */}
-        <Card className="mb-10 shadow-xl bg-white/80 backdrop-blur-sm border-0">
-          <CardHeader className="pb-4">
-            <CardTitle className="flex items-center gap-3 text-xl">
-              <div className="p-2 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-lg">
-                <User className="h-5 w-5 text-emerald-600" />
-              </div>
-              Your Account Information
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                  <span className="text-gray-600">Email:</span>
-                  <span className="font-medium text-gray-800">{user?.email}</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <span className="text-gray-600">Account Created:</span>
-                  <span className="font-medium text-gray-800">
-                    {user?.created_at && new Date(user.created_at).toLocaleDateString()}
-                  </span>
-                </div>
-              </div>
-              <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                  <span className="text-gray-600">User ID:</span>
-                  <span className="font-mono text-sm text-gray-800">{user?.id?.slice(0, 8)}...</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className={`w-2 h-2 rounded-full ${user?.email_confirmed_at ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
-                  <span className="text-gray-600">Email Verified:</span>
-                  <span className={`font-medium ${user?.email_confirmed_at ? 'text-green-600' : 'text-yellow-600'}`}>
-                    {user?.email_confirmed_at ? 'Yes' : 'Pending'}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Right Content Area (74% width, responsive) */}
+        <div className="flex-1 p-6 overflow-auto bg-[#F8FAFC]">
+          {activeTab === "upload" && (
+            <div className="space-y-6">
+              {/* Two-Card Upload Grid */}
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                {/* Certificate/Internship Upload Card */}
+                <Card className="border-dashed border-2 border-gray-300 hover:border-[#2161FF] transition-colors cursor-pointer bg-white shadow-sm hover:shadow-md rounded-xl h-52">
+                  <CardContent className="p-6 h-full flex flex-col justify-center">
+                    <div className="text-center">
+                      <div className="w-14 h-14 mx-auto mb-4 bg-yellow-100 rounded-full flex items-center justify-center">
+                        <Award className="h-7 w-7 text-yellow-600" />
+                      </div>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">Upload Certificate / Internship</h3>
+                      <p className="text-sm text-gray-500 mb-3">
+                        Drag and drop or click to upload certificates and internship documents
+                      </p>
+                      <p className="text-xs text-gray-400">
+                        Supports PDF, JPG, PNG files up to 10MB
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
 
-        {/* Features Grid */}
-        <div className="grid lg:grid-cols-2 gap-8">
-          <Card className="shadow-xl bg-white/80 backdrop-blur-sm border-0 hover:shadow-2xl transition-all duration-300">
-            <CardHeader className="pb-6">
-              <CardTitle className="flex items-center gap-3 text-xl">
-                <div className="p-2 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-lg">
-                  <FileText className="h-6 w-6 text-blue-600" />
-                </div>
-                Document Management
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="group flex flex-col items-center p-6 border border-gray-200 rounded-xl hover:bg-gradient-to-br hover:from-yellow-50 hover:to-orange-50 hover:border-yellow-200 cursor-pointer transition-all duration-200">
-                  <Award className="h-10 w-10 text-yellow-600 mb-3 group-hover:scale-110 transition-transform duration-200" />
-                  <span className="text-sm font-semibold text-gray-700">Certificates</span>
-                </div>
-                <div className="group flex flex-col items-center p-6 border border-gray-200 rounded-xl hover:bg-gradient-to-br hover:from-green-50 hover:to-emerald-50 hover:border-green-200 cursor-pointer transition-all duration-200">
-                  <Briefcase className="h-10 w-10 text-green-600 mb-3 group-hover:scale-110 transition-transform duration-200" />
-                  <span className="text-sm font-semibold text-gray-700">Internship</span>
-                </div>
-                <div className="group flex flex-col items-center p-6 border border-gray-200 rounded-xl hover:bg-gradient-to-br hover:from-blue-50 hover:to-cyan-50 hover:border-blue-200 cursor-pointer transition-all duration-200">
-                  <FileText className="h-10 w-10 text-blue-600 mb-3 group-hover:scale-110 transition-transform duration-200" />
-                  <span className="text-sm font-semibold text-gray-700">Gradesheets</span>
-                </div>
-                <div className="group flex flex-col items-center p-6 border border-gray-200 rounded-xl hover:bg-gradient-to-br hover:from-purple-50 hover:to-violet-50 hover:border-purple-200 cursor-pointer transition-all duration-200">
-                  <GitBranch className="h-10 w-10 text-purple-600 mb-3 group-hover:scale-110 transition-transform duration-200" />
-                  <span className="text-sm font-semibold text-gray-700">Projects</span>
-                </div>
+                {/* Project/Workshop Upload Card */}
+                <Card className="border-dashed border-2 border-gray-300 hover:border-[#2161FF] transition-colors cursor-pointer bg-white shadow-sm hover:shadow-md rounded-xl h-52">
+                  <CardContent className="p-6 h-full flex flex-col justify-center">
+                    <div className="text-center">
+                      <div className="w-14 h-14 mx-auto mb-4 bg-purple-100 rounded-full flex items-center justify-center">
+                        <Folder className="h-7 w-7 text-purple-600" />
+                      </div>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">Upload Project / Workshop</h3>
+                      <p className="text-sm text-gray-500 mb-3">
+                        Drag and drop or click to upload project files and workshop documents
+                      </p>
+                      <p className="text-xs text-gray-400">
+                        Supports PDF, JPG, PNG files up to 10MB
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
-            </CardContent>
-          </Card>
 
-          <Card className="shadow-xl bg-white/80 backdrop-blur-sm border-0 hover:shadow-2xl transition-all duration-300">
-            <CardHeader className="pb-6">
-              <CardTitle className="flex items-center gap-3 text-xl">
-                <div className="p-2 bg-gradient-to-br from-green-100 to-emerald-100 rounded-lg">
-                  <svg className="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                Authentication Status
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-center space-x-3 p-3 bg-green-50 rounded-lg border border-green-200">
-                  <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-                  <span className="text-sm font-medium text-green-800">Successfully authenticated with Supabase</span>
-                </div>
-                <div className="flex items-center space-x-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                  <div className="w-3 h-3 bg-blue-500 rounded-full animate-pulse"></div>
-                  <span className="text-sm font-medium text-blue-800">Google OAuth integration ready</span>
-                </div>
-                <div className="flex items-center space-x-3 p-3 bg-purple-50 rounded-lg border border-purple-200">
-                  <div className="w-3 h-3 bg-purple-500 rounded-full animate-pulse"></div>
-                  <span className="text-sm font-medium text-purple-800">Session management active</span>
-                </div>
-                <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200 mt-6">
-                  <div className="flex items-center gap-2">
-                    <span className="text-2xl">🎉</span>
-                    <p className="text-sm font-medium text-blue-900">
-                      Firebase has been successfully removed and replaced with Supabase authentication!
-                    </p>
+              {/* Certificates List */}
+              <Card className="bg-white shadow-sm hover:shadow-md transition-shadow rounded-xl border border-gray-100">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-xl text-gray-900">Certificates List</CardTitle>
+                    <div className="flex items-center space-x-3">
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <Input 
+                          placeholder="Search certificates..."
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                          className="pl-10 w-64 focus:border-[#2161FF] focus:ring-[#2161FF]"
+                        />
+                      </div>
+                      {selectedCertificates.length > 0 && (
+                        <Button size="sm" variant="outline" className="text-red-600 hover:bg-red-50 border-red-200">
+                          <Trash2 className="h-4 w-4 mr-1" />
+                          Delete ({selectedCertificates.length})
+                        </Button>
+                      )}
+                    </div>
                   </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-12">
+                          <Checkbox 
+                            checked={selectedCertificates.length === certificates.length}
+                            onCheckedChange={handleSelectAll}
+                          />
+                        </TableHead>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead>Event/Body</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredCertificates.map((cert) => (
+                        <TableRow key={cert.id} className="hover:bg-gray-50">
+                          <TableCell>
+                            <Checkbox 
+                              checked={selectedCertificates.includes(cert.id)}
+                              onCheckedChange={() => handleCertificateSelect(cert.id)}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center space-x-3">
+                              {getDocumentIcon(cert.type)}
+                              <span className="font-medium">{cert.name}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 capitalize">
+                              {cert.type}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-gray-600">{cert.event}</TableCell>
+                          <TableCell>{getStatusBadge(cert.status)}</TableCell>
+                          <TableCell className="text-gray-500">
+                            {new Date(cert.date).toLocaleDateString()}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex space-x-2">
+                              <Button size="sm" variant="outline">
+                                <Eye className="h-4 w-4 mr-1" />
+                                View
+                              </Button>
+                              <Button size="sm" variant="outline">
+                                <Download className="h-4 w-4 mr-1" />
+                                Download
+                              </Button>
+                              <Button size="sm" variant="outline">
+                                <QrCode className="h-4 w-4 mr-1" />
+                                QR
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* Other tab content */}
+          {activeTab !== "upload" && (
+            <div className="text-center py-12">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-2">
+                {[...navigationItems, ...bottomNavigationItems].find(item => item.id === activeTab)?.label}
+              </h2>
+              <p className="text-gray-500">Content for this section is coming soon...</p>
+            </div>
+          )}
         </div>
       </div>
     </div>

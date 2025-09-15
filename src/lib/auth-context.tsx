@@ -19,32 +19,49 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let mounted = true;
+
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+    const getInitialSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (mounted) {
+          setSession(session);
+          setUser(session?.user ?? null);
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error('Error getting session:', error);
+        if (mounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    getInitialSession();
 
     // Listen for auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
+      if (mounted) {
+        setSession(session);
+        setUser(session?.user ?? null);
+        setLoading(false);
 
-      // Redirect based on auth state
-      if (event === 'SIGNED_IN' && session) {
-        // Redirect to dashboard after successful sign in
-        window.location.href = '/dashboard/student';
-      } else if (event === 'SIGNED_OUT') {
-        // Redirect to login after sign out
-        window.location.href = '/login/student';
+        // Only redirect on specific events, not on initial load
+        if (event === 'SIGNED_OUT') {
+          // Redirect to login after sign out
+          window.location.href = '/login/student';
+        }
+        // Remove automatic redirect on SIGNED_IN to prevent refresh loops
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const handleSignOut = async () => {
