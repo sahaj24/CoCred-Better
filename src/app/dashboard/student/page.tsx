@@ -22,7 +22,8 @@ import {
   Plus,
   Search,
   Share2,
-  Folder
+  Folder,
+  Bell
 } from "lucide-react";
 import { useState, useContext } from "react";
 import { LanguageContext } from "@/lib/language-context";
@@ -35,6 +36,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import {
   Table,
   TableBody,
@@ -158,11 +165,15 @@ function StudentDashboardContent() {
     );
   };
 
-  const handleSelectAll = () => {
-    if (selectedCertificates.length === certificates.length) {
-      setSelectedCertificates([]);
+  // Filter for selectable certificates (not approved)
+  const selectableCertificates = certificates.filter(cert => cert.status !== "approved");
+  const selectableIds = selectableCertificates.map(cert => cert.id);
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedCertificates(selectableIds);
     } else {
-      setSelectedCertificates(certificates.map(cert => cert.id));
+      setSelectedCertificates([]);
     }
   };
 
@@ -202,8 +213,18 @@ function StudentDashboardContent() {
             {/* Placeholder for future global search */}
           </div>
             
-          {/* User Dropdown */}
-          <div className="flex items-center">
+          {/* Right Section: Notifications + User Dropdown */}
+          <div className="flex items-center space-x-3">
+            {/* Notification Bell */}
+            <Button variant="ghost" size="sm" className="relative p-2">
+              <Bell className="h-5 w-5 text-gray-600" />
+              {/* Notification badge */}
+              <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                3
+              </span>
+            </Button>
+            
+            {/* User Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="sm" className="flex items-center space-x-2">
@@ -314,38 +335,86 @@ function StudentDashboardContent() {
             <div className="space-y-6">
               {/* Two-Card Upload Grid */}
               <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                {/* Certificate/Internship Upload Card */}
-                <Card className="border-dashed border-2 border-gray-300 hover:border-[#2161FF] transition-colors cursor-pointer bg-white shadow-sm hover:shadow-md rounded-xl h-52">
-                  <CardContent className="p-6 h-full flex flex-col justify-center">
+                {/* Documents Upload Card */}
+                <Card className="bg-white shadow-sm hover:shadow-md transition-shadow rounded-xl border border-gray-100 cursor-pointer">
+                  <CardContent className="p-6">
                     <div className="text-center">
-                      <div className="w-14 h-14 mx-auto mb-4 bg-yellow-100 rounded-full flex items-center justify-center">
-                        <Award className="h-7 w-7 text-yellow-600" />
+                      <h3 className="text-lg font-semibold text-gray-900 mb-3">Upload Documents</h3>
+                      <p className="text-sm text-gray-500 mb-4">
+                        Upload your certificates, internships, and other documents
+                      </p>
+                      <div className="flex justify-center space-x-4 mb-4">
+                        <div className="flex flex-col items-center space-y-1">
+                          <div className="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center">
+                            <Award className="h-5 w-5 text-yellow-600" />
+                          </div>
+                          <span className="text-xs text-gray-600">Certificate</span>
+                        </div>
+                        <div className="flex flex-col items-center space-y-1">
+                          <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                            <Briefcase className="h-5 w-5 text-green-600" />
+                          </div>
+                          <span className="text-xs text-gray-600">Internship</span>
+                        </div>
+                        <div className="flex flex-col items-center space-y-1">
+                          <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                            <GitBranch className="h-5 w-5 text-purple-600" />
+                          </div>
+                          <span className="text-xs text-gray-600">Project</span>
+                        </div>
+                        <div className="flex flex-col items-center space-y-1">
+                          <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                            <FileText className="h-5 w-5 text-blue-600" />
+                          </div>
+                          <span className="text-xs text-gray-600">Workshop</span>
+                        </div>
                       </div>
-                      <h3 className="text-lg font-semibold text-gray-900 mb-2">Upload Certificate / Internship</h3>
-                      <p className="text-sm text-gray-500 mb-3">
-                        Drag and drop or click to upload certificates and internship documents
-                      </p>
-                      <p className="text-xs text-gray-400">
-                        Supports PDF, JPG, PNG files up to 10MB
-                      </p>
+                      <Button onClick={() => {
+                        // TODO: Navigate to upload page
+                        console.log('Navigate to upload page');
+                      }} className="bg-[#2161FF] hover:bg-blue-700">
+                        <Upload className="h-4 w-4 mr-2" />
+                        Upload Documents
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>
 
-                {/* Project/Workshop Upload Card */}
-                <Card className="border-dashed border-2 border-gray-300 hover:border-[#2161FF] transition-colors cursor-pointer bg-white shadow-sm hover:shadow-md rounded-xl h-52">
-                  <CardContent className="p-6 h-full flex flex-col justify-center">
+                {/* Downloads & Management Card */}
+                <Card className="bg-white shadow-sm hover:shadow-md transition-shadow rounded-xl border border-gray-100 cursor-pointer">
+                  <CardContent className="p-6">
                     <div className="text-center">
-                      <div className="w-14 h-14 mx-auto mb-4 bg-purple-100 rounded-full flex items-center justify-center">
-                        <Folder className="h-7 w-7 text-purple-600" />
+                      <h3 className="text-lg font-semibold text-gray-900 mb-3">Download & Manage</h3>
+                      <p className="text-sm text-gray-500 mb-4">
+                        Download your documents and manage your portfolio
+                      </p>
+                      <div className="flex justify-center space-x-6 mb-4">
+                        <div className="flex flex-col items-center space-y-1">
+                          <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                            <Download className="h-5 w-5 text-blue-600" />
+                          </div>
+                          <span className="text-xs text-gray-600">Download</span>
+                        </div>
+                        <div className="flex flex-col items-center space-y-1">
+                          <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
+                            <QrCode className="h-5 w-5 text-indigo-600" />
+                          </div>
+                          <span className="text-xs text-gray-600">Generate QR</span>
+                        </div>
+                        <div className="flex flex-col items-center space-y-1">
+                          <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
+                            <Share2 className="h-5 w-5 text-emerald-600" />
+                          </div>
+                          <span className="text-xs text-gray-600">Share</span>
+                        </div>
                       </div>
-                      <h3 className="text-lg font-semibold text-gray-900 mb-2">Upload Project / Workshop</h3>
-                      <p className="text-sm text-gray-500 mb-3">
-                        Drag and drop or click to upload project files and workshop documents
-                      </p>
-                      <p className="text-xs text-gray-400">
-                        Supports PDF, JPG, PNG files up to 10MB
-                      </p>
+                      <Button onClick={() => {
+                        // TODO: Navigate to download/manage page
+                        console.log('Navigate to download page');
+                      }} variant="outline" className="border-[#2161FF] text-[#2161FF] hover:bg-blue-50">
+                        <Folder className="h-4 w-4 mr-2" />
+                        Manage Files
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>
@@ -369,7 +438,7 @@ function StudentDashboardContent() {
                       {selectedCertificates.length > 0 && (
                         <Button size="sm" variant="outline" className="text-red-600 hover:bg-red-50 border-red-200">
                           <Trash2 className="h-4 w-4 mr-1" />
-                          Delete ({selectedCertificates.length})
+                          Delete ({selectedCertificates.filter(id => selectableIds.includes(id)).length})
                         </Button>
                       )}
                     </div>
@@ -380,27 +449,31 @@ function StudentDashboardContent() {
                     <TableHeader>
                       <TableRow>
                         <TableHead className="w-12">
-                          <Checkbox 
-                            checked={selectedCertificates.length === certificates.length}
-                            onCheckedChange={handleSelectAll}
-                          />
+                          {selectableCertificates.length > 0 && (
+                            <Checkbox 
+                              checked={selectableIds.length > 0 && selectableIds.every(id => selectedCertificates.includes(id))}
+                              onCheckedChange={handleSelectAll}
+                            />
+                          )}
                         </TableHead>
                         <TableHead>Name</TableHead>
                         <TableHead>Type</TableHead>
                         <TableHead>Event/Body</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead>Date</TableHead>
-                        <TableHead>Actions</TableHead>
+                        <TableHead></TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {filteredCertificates.map((cert) => (
                         <TableRow key={cert.id} className="hover:bg-gray-50">
                           <TableCell>
-                            <Checkbox 
-                              checked={selectedCertificates.includes(cert.id)}
-                              onCheckedChange={() => handleCertificateSelect(cert.id)}
-                            />
+                            {cert.status !== "approved" && (
+                              <Checkbox 
+                                checked={selectedCertificates.includes(cert.id)}
+                                onCheckedChange={() => handleCertificateSelect(cert.id)}
+                              />
+                            )}
                           </TableCell>
                           <TableCell>
                             <div className="flex items-center space-x-3">
@@ -419,20 +492,47 @@ function StudentDashboardContent() {
                             {new Date(cert.date).toLocaleDateString()}
                           </TableCell>
                           <TableCell>
-                            <div className="flex space-x-2">
-                              <Button size="sm" variant="outline">
-                                <Eye className="h-4 w-4 mr-1" />
-                                View
-                              </Button>
-                              <Button size="sm" variant="outline">
-                                <Download className="h-4 w-4 mr-1" />
-                                Download
-                              </Button>
-                              <Button size="sm" variant="outline">
-                                <QrCode className="h-4 w-4 mr-1" />
-                                QR
-                              </Button>
-                            </div>
+                            <TooltipProvider>
+                              <div className="flex space-x-1">
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                                      <Eye className="h-4 w-4" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>View</TooltipContent>
+                                </Tooltip>
+                                
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                                      <Download className="h-4 w-4" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>Download</TooltipContent>
+                                </Tooltip>
+                                
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                                      <QrCode className="h-4 w-4" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>Generate QR</TooltipContent>
+                                </Tooltip>
+                                
+                                {cert.status !== "approved" && (
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-red-500 hover:text-red-700">
+                                        <Trash2 className="h-4 w-4" />
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>Delete</TooltipContent>
+                                  </Tooltip>
+                                )}
+                              </div>
+                            </TooltipProvider>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -443,8 +543,32 @@ function StudentDashboardContent() {
             </div>
           )}
 
+          {/* Download Tab Content */}
+          {activeTab === "download" && (
+            <div className="space-y-6">
+              <Card className="bg-white shadow-sm hover:shadow-md transition-shadow rounded-xl border border-gray-100">
+                <CardHeader>
+                  <CardTitle className="text-xl text-gray-900">Download Center</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center py-8">
+                    <div className="w-16 h-16 mx-auto mb-4 bg-blue-100 rounded-full flex items-center justify-center">
+                      <Download className="h-8 w-8 text-blue-600" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Download Your Documents</h3>
+                    <p className="text-gray-500 mb-6">Access and download all your certificates and documents</p>
+                    <Button className="bg-[#2161FF] hover:bg-blue-700">
+                      <Download className="h-4 w-4 mr-2" />
+                      Browse Downloads
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
           {/* Other tab content */}
-          {activeTab !== "upload" && (
+          {activeTab !== "upload" && activeTab !== "download" && (
             <div className="text-center py-12">
               <h2 className="text-2xl font-semibold text-gray-900 mb-2">
                 {[...navigationItems, ...bottomNavigationItems].find(item => item.id === activeTab)?.label}
