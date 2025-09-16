@@ -1,16 +1,41 @@
 
 "use client";
 
-import { useEffect, useState, useContext } from "react";
+import { useState, useContext, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User, ChevronRight, LogOut, FilePlus, Plus, Calendar as CalendarIcon, Trash2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { 
+  User, 
+  LogOut, 
+  LayoutDashboard, 
+  Users, 
+  Calendar, 
+  Settings, 
+  TrendingUp,
+  Clock,
+  CheckCircle,
+  Home,
+  Bell,
+  HelpCircle,
+  Award,
+  FileText,
+  Plus,
+  Eye,
+  UserCheck,
+  ClipboardList,
+  BarChart,
+  Shield,
+  ChevronRight,
+  FilePlus,
+  Trash2,
+  Upload
+} from "lucide-react";
 import { getAllUserProfiles, getEvents, removeEvent } from "@/lib/file-store";
-import type { UserProfile, AppEvent } from "@/lib/types";
+import type { UserProfile, AppEvent, SupabaseUserProfile } from "@/lib/types";
 import { LanguageContext } from "@/lib/language-context";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { format } from "date-fns";
 import {
   AlertDialog,
@@ -24,22 +49,75 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/lib/auth-context";
+import { supabase } from "@/lib/supabase";
+import { AuthorityRoute } from "@/components/auth/protected-route";
+import { getAuthorityFeatures, getAuthorityRole, hasPermission } from "@/lib/authority-roles";
+import { DEV_MODE, getMockProfile } from "@/lib/dev-config";
+
+type NavigationTab = 'home' | 'dashboard' | 'students' | 'events' | 'certificates' | 'faculty' | 'analytics' | 'settings';
 
 
 export default function AuthorityDashboard() {
+  const [activeTab, setActiveTab] = useState<NavigationTab>("home");
   const [students, setStudents] = useState<UserProfile[]>([]);
   const [events, setEvents] = useState<AppEvent[]>([]);
   const [eventToDelete, setEventToDelete] = useState<AppEvent | null>(null);
+  const [userProfile, setUserProfile] = useState<SupabaseUserProfile | null>(null);
   const { translations } = useContext(LanguageContext);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   useEffect(() => {
     setStudents(getAllUserProfiles());
     setEvents(getEvents());
   }, []);
 
+  // Fetch user profile to get authority type and permissions
+  useEffect(() => {
+    async function fetchUserProfile() {
+      // Use mock profile in dev mode
+      if (DEV_MODE.BYPASS_AUTH) {
+        setUserProfile(DEV_MODE.MOCK_AUTHORITY_PROFILE);
+        return;
+      }
+
+      if (!user?.id) return;
+
+      try {
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('user_id', user.id)
+          .single();
+
+        if (error) {
+          console.error('Error fetching user profile:', error);
+        } else {
+          setUserProfile(profile);
+        }
+      } catch (error) {
+        console.error('Error in fetchUserProfile:', error);
+      }
+    }
+
+    fetchUserProfile();
+  }, [user]);
+
   const handleDeleteEvent = () => {
     if (!eventToDelete) return;
+    
+    // Check permission before deleting
+    if (!hasPermission(userProfile?.permissions, 'can_delete_events')) {
+      toast({
+        title: "Access Denied",
+        description: "You don't have permission to delete events.",
+        variant: "destructive"
+      });
+      setEventToDelete(null);
+      return;
+    }
+
     removeEvent(eventToDelete.id);
     toast({
       title: "Event Deleted",
@@ -49,138 +127,735 @@ export default function AuthorityDashboard() {
     setEventToDelete(null);
   };
 
-  return (
-    <div className="flex min-h-screen flex-col items-center bg-background p-4 md:p-8 relative">
-      <div className="w-full max-w-4xl">
-        <div className="mb-8 flex justify-between items-center">
-            <h1 className="text-3xl font-bold text-primary flex items-center gap-2">
-                <User className="h-8 w-8" />
-                {translations.authorityDashboard.title}
-            </h1>
-            <Button asChild variant="outline">
-                <Link href="/">
-                    <LogOut className="mr-2" />
-                    {translations.authorityDashboard.logout}
-                </Link>
-            </Button>
+  // Get authority role information
+  const authorityRole = userProfile?.authority_type ? getAuthorityRole(userProfile.authority_type) : null;
+
+  // Check permissions
+  const canManageStudents = hasPermission(userProfile?.permissions, 'can_manage_students');
+  const canCreateEvents = hasPermission(userProfile?.permissions, 'can_create_events');
+  const canDeleteEvents = hasPermission(userProfile?.permissions, 'can_delete_events');
+  const canIssueCertificates = hasPermission(userProfile?.permissions, 'can_issue_certificates');
+  const canApproveCertificates = hasPermission(userProfile?.permissions, 'can_approve_certificates');
+  const canManageFaculty = hasPermission(userProfile?.permissions, 'can_manage_faculty');
+  const canViewAnalytics = hasPermission(userProfile?.permissions, 'can_view_analytics');
+
+  // Navigation items based on permissions
+  const navigationItems = [
+    { id: "home" as NavigationTab, label: "Home", icon: Home },
+    { id: "dashboard" as NavigationTab, label: "Dashboard", icon: LayoutDashboard },
+    ...(canManageStudents ? [{ id: "students" as NavigationTab, label: "Students", icon: Users }] : []),
+    ...(canCreateEvents ? [{ id: "events" as NavigationTab, label: "Events", icon: Calendar }] : []),
+    ...(canIssueCertificates || canApproveCertificates ? [{ id: "certificates" as NavigationTab, label: "Certificates", icon: Award }] : []),
+    ...(canManageFaculty ? [{ id: "faculty" as NavigationTab, label: "Faculty", icon: UserCheck }] : []),
+    ...(canViewAnalytics ? [{ id: "analytics" as NavigationTab, label: "Analytics", icon: BarChart }] : []),
+    { id: "settings" as NavigationTab, label: "Settings", icon: Settings },
+  ];
+
+  const bottomNavigationItems = [
+    { id: "help", label: "Help", icon: HelpCircle },
+    { id: "logout", label: "Logout", icon: LogOut },
+  ];
+
+  const renderHomeContent = () => (
+    <div className="space-y-8">
+      {/* Welcome Section */}
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold mb-2">Welcome, Authority</h2>
+        {authorityRole && (
+          <div className="flex items-center gap-2 mb-4">
+            <Badge variant="secondary">{authorityRole.label}</Badge>
+            {userProfile?.organization && (
+              <Badge variant="outline">{userProfile.organization}</Badge>
+            )}
+          </div>
+        )}
+        <p className="text-muted-foreground">
+          {authorityRole?.description || "Manage the institution's co-curricular activities and certificates."}
+        </p>
+      </div>
+
+      {/* Overview Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="bg-card rounded-xl p-6 border">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">Total Students</p>
+              <p className="text-2xl font-semibold mt-1">{students.length}</p>
+            </div>
+            <div className="h-10 w-10 bg-blue-50 rounded-lg flex items-center justify-center">
+              <Users className="h-5 w-5 text-blue-600" />
+            </div>
+          </div>
+        </div>
+        
+        <div className="bg-card rounded-xl p-6 border">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">Active Events</p>
+              <p className="text-2xl font-semibold mt-1">{events.length}</p>
+            </div>
+            <div className="h-10 w-10 bg-green-50 rounded-lg flex items-center justify-center">
+              <Calendar className="h-5 w-5 text-green-600" />
+            </div>
+          </div>
+        </div>
+        
+        <div className="bg-card rounded-xl p-6 border">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">Certificates</p>
+              <p className="text-2xl font-semibold mt-1">347</p>
+            </div>
+            <div className="h-10 w-10 bg-purple-50 rounded-lg flex items-center justify-center">
+              <Award className="h-5 w-5 text-purple-600" />
+            </div>
+          </div>
         </div>
 
-        <Card className="shadow-lg mb-8">
-          <CardHeader>
-            <CardTitle>{translations.authorityDashboard.studentRoster}</CardTitle>
-            <CardDescription>{translations.authorityDashboard.selectStudent}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {students.length > 0 ? (
-              <ul className="space-y-3">
-                {students.map((student) => (
-                  <li key={student.aaparId} className="flex items-center justify-between p-4 bg-secondary rounded-md hover:bg-secondary/80 transition-colors">
-                      <div className="flex items-center gap-4">
-                        <Avatar>
-                          <AvatarImage src={student.imageUrl} alt={student.name} />
-                          <AvatarFallback>{student.name.charAt(0)}</AvatarFallback>
-                        </Avatar>
-                        <div>
-                            <p className="font-medium">{student.name}</p>
-                            <p className="text-sm text-muted-foreground">{student.aaparId}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                         <Button asChild variant="outline" size="sm">
-                            <Link href={`/dashboard/authority/issue-document/${student.aaparId}`}>
-                                <FilePlus className="mr-2 h-4 w-4" />
-                                Issue Document
-                            </Link>
-                        </Button>
-                        <Button asChild size="sm">
-                             <Link href={`/dashboard/authority/student/${student.aaparId}`} className="flex items-center">
-                                View Documents
-                                <ChevronRight className="h-5 w-5 text-primary-foreground ml-1" />
-                            </Link>
-                        </Button>
-                      </div>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-muted-foreground text-center">{translations.authorityDashboard.noStudents}</p>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-lg">
-          <CardHeader>
-            <CardTitle>Event Roster</CardTitle>
-            <CardDescription>All scheduled events.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {events.length > 0 ? (
-              <ul className="space-y-3">
-                {events.map((event) => (
-                  <li key={event.id} className="flex items-center justify-between p-4 bg-secondary rounded-md">
-                      <div className="flex items-center gap-4">
-                        <CalendarIcon className="h-6 w-6 text-muted-foreground" />
-                        <div>
-                            <p className="font-medium">{event.name}</p>
-                            <p className="text-sm text-muted-foreground">{event.organizer}</p>
-                            <p className="text-xs text-muted-foreground font-mono">{event.key}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 text-right">
-                         <div>
-                            <p className="text-sm font-medium">{format(new Date(event.startDate), "PPP")} - {format(new Date(event.endDate), "PPP")}</p>
-                            <Link href={event.devopsLink} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-500 hover:underline">
-                                DevOps Link
-                            </Link>
-                         </div>
-                         <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                                <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive/80" onClick={() => setEventToDelete(event)}>
-                                    <Trash2 className="h-4 w-4" />
-                                    <span className="sr-only">Delete Event</span>
-                                </Button>
-                            </AlertDialogTrigger>
-                            {eventToDelete && eventToDelete.id === event.id && (
-                            <AlertDialogContent>
-                                <AlertDialogHeader>
-                                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                    This action cannot be undone. This will permanently delete the event
-                                    <span className="font-semibold text-foreground"> {event.name}</span>.
-                                </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                <AlertDialogCancel onClick={() => setEventToDelete(null)}>Cancel</AlertDialogCancel>
-                                <AlertDialogAction onClick={handleDeleteEvent}>Continue</AlertDialogAction>
-                                </AlertDialogFooter>
-                            </AlertDialogContent>
-                            )}
-                        </AlertDialog>
-                      </div>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-muted-foreground text-center">No events have been created yet.</p>
-            )}
-          </CardContent>
-        </Card>
-
+        <div className="bg-card rounded-xl p-6 border">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">Faculty Members</p>
+              <p className="text-2xl font-semibold mt-1">12</p>
+            </div>
+            <div className="h-10 w-10 bg-orange-50 rounded-lg flex items-center justify-center">
+              <UserCheck className="h-5 w-5 text-orange-600" />
+            </div>
+          </div>
+        </div>
       </div>
-      <TooltipProvider>
-        <Tooltip>
-            <TooltipTrigger asChild>
-                <Button asChild className="fixed bottom-8 right-8 h-16 w-16 rounded-full shadow-lg" size="icon">
-                    <Link href="/dashboard/authority/add-event">
-                        <Plus className="h-8 w-8" />
-                    </Link>
-                </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-                <p>Add Event</p>
-            </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
+
+      {/* Quick Actions */}
+      <div>
+        <h2 className="text-lg font-medium mb-4">Quick Actions</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {canManageStudents && (
+            <button 
+              onClick={() => setActiveTab("students")}
+              className="text-left p-6 bg-card rounded-xl border hover:shadow-md transition-shadow"
+            >
+              <div className="flex items-start space-x-4">
+                <div className="h-10 w-10 bg-blue-50 rounded-lg flex items-center justify-center">
+                  <Users className="h-5 w-5 text-blue-600" />
+                </div>
+                <div>
+                  <h3 className="font-medium">Manage Students</h3>
+                  <p className="text-sm text-muted-foreground mt-1">View and manage student profiles</p>
+                </div>
+              </div>
+            </button>
+          )}
+          
+          {canCreateEvents && (
+            <button 
+              onClick={() => setActiveTab("events")}
+              className="text-left p-6 bg-card rounded-xl border hover:shadow-md transition-shadow"
+            >
+              <div className="flex items-start space-x-4">
+                <div className="h-10 w-10 bg-green-50 rounded-lg flex items-center justify-center">
+                  <Calendar className="h-5 w-5 text-green-600" />
+                </div>
+                <div>
+                  <h3 className="font-medium">Manage Events</h3>
+                  <p className="text-sm text-muted-foreground mt-1">Create and oversee institutional events</p>
+                </div>
+              </div>
+            </button>
+          )}
+
+          {(canIssueCertificates || canApproveCertificates) && (
+            <button 
+              onClick={() => setActiveTab("certificates")}
+              className="text-left p-6 bg-card rounded-xl border hover:shadow-md transition-shadow"
+            >
+              <div className="flex items-start space-x-4">
+                <div className="h-10 w-10 bg-purple-50 rounded-lg flex items-center justify-center">
+                  <Award className="h-5 w-5 text-purple-600" />
+                </div>
+                <div>
+                  <h3 className="font-medium">{canIssueCertificates ? 'Issue Certificates' : 'Approve Certificates'}</h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {canIssueCertificates ? 'Generate official certificates' : 'Review and approve certificate requests'}
+                  </p>
+                </div>
+              </div>
+            </button>
+          )}
+        </div>
+      </div>
     </div>
+  );
+
+  const renderDashboardContent = () => (
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold">Dashboard Overview</h2>
+      
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Recent Activity */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Recent Activity</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {[
+                { action: "Certificate approved", item: "John Doe - Web Development", time: "2 hours ago" },
+                { action: "Event created", item: "AI Workshop Series", time: "1 day ago" },
+                { action: "Student registered", item: "Jane Smith", time: "2 days ago" }
+              ].map((activity, index) => (
+                <div key={index} className="flex items-center space-x-3 p-3 bg-muted/30 rounded-lg">
+                  <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium">{activity.action}</p>
+                    <p className="text-xs text-muted-foreground">{activity.item}</p>
+                  </div>
+                  <span className="text-xs text-muted-foreground">{activity.time}</span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* System Status */}
+        <Card>
+          <CardHeader>
+            <CardTitle>System Status</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm">Student Registrations</span>
+                <Badge variant="secondary">Active</Badge>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm">Certificate Generation</span>
+                <Badge variant="secondary">Active</Badge>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm">Event Management</span>
+                <Badge variant="secondary">Active</Badge>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+
+  const renderStudentsContent = () => (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold">Student Management</h2>
+        <Button>
+          <Plus className="mr-2 h-4 w-4" />
+          Add Student
+        </Button>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>All Students</CardTitle>
+          <CardDescription>Manage student profiles and documents</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {students.length > 0 ? (
+            <div className="space-y-3">
+              {students.map((student) => (
+                <div key={student.aaparId} className="flex items-center justify-between p-4 bg-secondary/30 rounded-lg hover:bg-secondary/50 transition-colors">
+                  <div className="flex items-center gap-4">
+                    <Avatar>
+                      <AvatarImage src={student.imageUrl} alt={student.name} />
+                      <AvatarFallback>{student.name.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="font-medium">{student.name}</p>
+                      <p className="text-sm text-muted-foreground">{student.aaparId}</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    {canIssueCertificates && (
+                      <Button asChild variant="outline" size="sm">
+                        <Link href={`/dashboard/authority/issue-document/${student.aaparId}`}>
+                          <FilePlus className="mr-2 h-4 w-4" />
+                          Issue Document
+                        </Link>
+                      </Button>
+                    )}
+                    <Button asChild size="sm">
+                      <Link href={`/dashboard/authority/student/${student.aaparId}`}>
+                        View Documents
+                        <ChevronRight className="ml-1 h-4 w-4" />
+                      </Link>
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-muted-foreground text-center py-8">No students registered yet.</p>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+
+  const renderEventsContent = () => (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold">Event Management</h2>
+        <Button asChild>
+          <Link href="/dashboard/authority/add-event">
+            <Plus className="mr-2 h-4 w-4" />
+            Create Event
+          </Link>
+        </Button>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>All Events</CardTitle>
+          <CardDescription>Manage institutional events and activities</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {events.length > 0 ? (
+            <div className="space-y-3">
+              {events.map((event) => (
+                <div key={event.id} className="flex items-center justify-between p-4 bg-secondary/30 rounded-lg">
+                  <div className="flex items-center gap-4">
+                    <div className="h-10 w-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                      <Calendar className="h-4 w-4 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-medium">{event.name}</p>
+                      <p className="text-sm text-muted-foreground">{event.organizer}</p>
+                      <p className="text-xs text-muted-foreground font-mono">{event.key}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="text-right">
+                      <p className="text-sm font-medium">
+                        {format(new Date(event.startDate), "MMM dd")} - {format(new Date(event.endDate), "MMM dd")}
+                      </p>
+                      <Link href={event.devopsLink} target="_blank" className="text-sm text-blue-500 hover:underline">
+                        DevOps Link
+                      </Link>
+                    </div>
+                    {canDeleteEvents && (
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive/80" onClick={() => setEventToDelete(event)}>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        {eventToDelete && eventToDelete.id === event.id && (
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This action cannot be undone. This will permanently delete the event
+                              <span className="font-semibold text-foreground"> {event.name}</span>.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel onClick={() => setEventToDelete(null)}>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={handleDeleteEvent}>Continue</AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                        )}
+                      </AlertDialog>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-muted-foreground text-center py-8">No events created yet.</p>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+
+  const renderCertificatesContent = () => (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold">Certificate Management</h2>
+        {canIssueCertificates && (
+          <Button>
+            <Award className="mr-2 h-4 w-4" />
+            Issue Certificate
+          </Button>
+        )}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>{canIssueCertificates ? 'Ready to Issue' : 'Pending Approvals'}</CardTitle>
+            <CardDescription>
+              {canIssueCertificates 
+                ? 'Completed events ready for certificate generation' 
+                : 'Certificate requests awaiting your approval'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {[
+                { event: "Web Development Workshop", participants: 28, status: "completed" },
+                { event: "AI/ML Bootcamp", participants: 35, status: "completed" },
+                { event: "Data Science Course", participants: 22, status: "completed" }
+              ].map((cert, index) => (
+                <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div>
+                    <p className="font-medium">{cert.event}</p>
+                    <p className="text-sm text-muted-foreground">{cert.participants} participants</p>
+                  </div>
+                  <Button size="sm">
+                    {canIssueCertificates ? 'Issue Certificates' : 'Approve Request'}
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Certificate Statistics</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex justify-between">
+                <span className="text-sm">Total Issued</span>
+                <span className="font-medium">347</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm">This Month</span>
+                <span className="font-medium">28</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm">Pending</span>
+                <span className="font-medium">15</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+
+  const renderSettingsContent = () => (
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold">Settings</h2>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle>Authority Profile</CardTitle>
+          <CardDescription>Manage your authority settings and preferences</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium">Authority Type</p>
+                <p className="text-sm text-muted-foreground">{authorityRole?.label}</p>
+              </div>
+              <Badge variant="secondary">{userProfile?.authority_type}</Badge>
+            </div>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium">Organization</p>
+                <p className="text-sm text-muted-foreground">{userProfile?.organization}</p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+
+  const renderFacultyContent = () => (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold">Faculty Management</h2>
+        <Button>
+          <Plus className="mr-2 h-4 w-4" />
+          Add Faculty
+        </Button>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Faculty Overview</CardTitle>
+            <CardDescription>Manage faculty members and their roles</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex justify-between">
+                <span className="text-sm">Total Faculty</span>
+                <span className="font-medium">12</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm">Active This Month</span>
+                <span className="font-medium">8</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm">Events Organized</span>
+                <span className="font-medium">15</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Quick Actions</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <Button asChild variant="outline" className="w-full justify-start">
+                <Link href="/dashboard/authority/faculty/profile">
+                  <UserCheck className="mr-2 h-4 w-4" />
+                  View Faculty Profiles
+                </Link>
+              </Button>
+              <Button asChild variant="outline" className="w-full justify-start">
+                <Link href="/dashboard/authority/faculty/batch-upload">
+                  <Upload className="mr-2 h-4 w-4" />
+                  Batch Upload Faculty
+                </Link>
+              </Button>
+              <Button asChild variant="outline" className="w-full justify-start">
+                <Link href="/dashboard/authority/faculty/notifications">
+                  <Bell className="mr-2 h-4 w-4" />
+                  Faculty Notifications
+                </Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Recent Faculty Activity</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {[
+              { name: "Dr. Smith", action: "Created new event", time: "2 hours ago", event: "AI Workshop" },
+              { name: "Prof. Johnson", action: "Updated course materials", time: "4 hours ago", event: "Data Science Course" },
+              { name: "Dr. Williams", action: "Approved certificates", time: "1 day ago", event: "Web Development" }
+            ].map((activity, index) => (
+              <div key={index} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <Avatar className="h-9 w-9">
+                    <AvatarFallback>{activity.name.split(' ')[1]?.charAt(0) || 'F'}</AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <p className="font-medium text-sm">{activity.name}</p>
+                    <p className="text-xs text-muted-foreground">{activity.action}</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs font-medium">{activity.event}</p>
+                  <p className="text-xs text-muted-foreground">{activity.time}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+
+  const renderAnalyticsContent = () => (
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold">Analytics & Reports</h2>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Student Engagement</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">87%</div>
+            <p className="text-xs text-muted-foreground">+5% from last month</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Event Completion</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">92%</div>
+            <p className="text-xs text-muted-foreground">+2% from last month</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Certificate Issued</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">347</div>
+            <p className="text-xs text-muted-foreground">+28 this month</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Faculty Activity</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">78%</div>
+            <p className="text-xs text-muted-foreground">+12% from last month</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Monthly Trends</CardTitle>
+          <CardDescription>Performance overview for the last 6 months</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="h-64 flex items-center justify-center text-muted-foreground">
+            📊 Charts will be implemented with actual data integration
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'home':
+        return renderHomeContent();
+      case 'dashboard':
+        return renderDashboardContent();
+      case 'students':
+        return canManageStudents ? renderStudentsContent() : renderHomeContent();
+      case 'events':
+        return canCreateEvents ? renderEventsContent() : renderHomeContent();
+      case 'certificates':
+        return (canIssueCertificates || canApproveCertificates) ? renderCertificatesContent() : renderHomeContent();
+      case 'faculty':
+        return canManageFaculty ? renderFacultyContent() : renderHomeContent();
+      case 'analytics':
+        return canViewAnalytics ? renderAnalyticsContent() : renderHomeContent();
+      case 'settings':
+        return renderSettingsContent();
+      default:
+        return renderHomeContent();
+    }
+  };
+
+  return (
+    <AuthorityRoute>
+      <div className="min-h-screen bg-gray-50">
+        {/* Header (64px height) */}
+        <div className="bg-white border-b border-gray-200 px-6 py-4 h-16">
+          <div className="flex items-center justify-between h-full">
+            {/* Logo */}
+            <div className="flex items-center space-x-2">
+              <img 
+                src="/logo-blue.svg" 
+                alt="CoCred Logo" 
+                className="h-10 w-auto"
+              />
+            </div>
+
+            {/* Right Section: Notifications + User Info */}
+            <div className="flex items-center space-x-3">
+              {/* Notification Bell */}
+              <Button variant="ghost" size="sm" className="relative p-2">
+                <Bell className="h-5 w-5 text-gray-600" />
+                <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                  2
+                </span>
+              </Button>
+              
+              {/* User Info */}
+              <div className="flex items-center space-x-2">
+                <Avatar className="h-8 w-8">
+                  <AvatarImage src={userProfile?.avatar_url} alt={userProfile?.full_name} />
+                  <AvatarFallback className="bg-primary text-primary-foreground text-sm">
+                    {userProfile?.full_name?.charAt(0) || 'A'}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="hidden md:block">
+                  <p className="text-sm font-medium">{userProfile?.full_name || 'Authority'}</p>
+                  <p className="text-xs text-gray-500">{authorityRole?.label}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex h-[calc(100vh-64px)]">
+          {/* Sidebar (320px width) */}
+          <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
+            {/* Navigation */}
+            <div className="flex-1 px-4 py-6">
+              <nav className="space-y-2">
+                {navigationItems.map((item) => {
+                  const IconComponent = item.icon;
+                  const isActive = activeTab === item.id;
+                  
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => setActiveTab(item.id)}
+                      className={`w-full flex items-center space-x-3 px-3 py-3 rounded-lg text-left transition-colors ${
+                        isActive 
+                          ? 'bg-primary text-primary-foreground shadow-sm' 
+                          : 'text-gray-700 hover:bg-gray-100'
+                      }`}
+                    >
+                      <IconComponent className="h-5 w-5 flex-shrink-0" />
+                      <span className="font-medium">{item.label}</span>
+                    </button>
+                  );
+                })}
+              </nav>
+            </div>
+
+            {/* Bottom Navigation */}
+            <div className="border-t border-gray-200 px-4 py-4">
+              <div className="space-y-1">
+                {bottomNavigationItems.map((item) => {
+                  const IconComponent = item.icon;
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => {
+                        if (item.id === 'logout') {
+                          // Handle logout
+                          window.location.href = '/';
+                        }
+                      }}
+                      className="w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-left text-gray-700 hover:bg-gray-100 transition-colors"
+                    >
+                      <IconComponent className="h-5 w-5 flex-shrink-0" />
+                      <span className="text-sm">{item.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* Main Content */}
+          <div className="flex-1 overflow-auto">
+            <div className="p-8">
+              {renderContent()}
+            </div>
+          </div>
+        </div>
+      </div>
+    </AuthorityRoute>
   );
 }

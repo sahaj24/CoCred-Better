@@ -81,7 +81,7 @@ const getBaseUrl = () => {
 }
 
 // Google OAuth configuration with dynamic redirect
-export const signInWithGoogle = async (userType: 'student' | 'teacher' | 'authority' = 'student') => {
+export const signInWithGoogle = async (userType: 'student' | 'authority' = 'student') => {
   const baseUrl = getBaseUrl()
   // Go back to direct dashboard redirect for simplicity
   const redirectUrl = `${baseUrl}/dashboard/${userType}`

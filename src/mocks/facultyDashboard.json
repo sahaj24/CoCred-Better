@@ -1,0 +1,201 @@
+{
+  "statistics": {
+    "totalStudents": 142,
+    "approvedStudents": 89,
+    "pendingStudents": 31,
+    "disapprovedStudents": 22,
+    "averageGrade": 3.45,
+    "completionRate": 94.2
+  },
+  "students": [
+    {
+      "id": "1",
+      "name": "John Doe",
+      "studentId": "STU001",
+      "email": "john.doe@university.edu",
+      "status": "pending",
+      "lastActivity": "2 hours ago",
+      "course": "CS101",
+      "avatar": "/avatars/john.jpg",
+      "grade": 3.7,
+      "credits": 15
+    },
+    {
+      "id": "2",
+      "name": "Jane Smith",
+      "studentId": "STU002",
+      "email": "jane.smith@university.edu",
+      "status": "approved",
+      "lastActivity": "1 day ago",
+      "course": "CS201",
+      "avatar": "/avatars/jane.jpg",
+      "grade": 3.9,
+      "credits": 18
+    },
+    {
+      "id": "3",
+      "name": "Mike Johnson",
+      "studentId": "STU003",
+      "email": "mike.johnson@university.edu",
+      "status": "disapproved",
+      "lastActivity": "3 days ago",
+      "course": "CS101",
+      "avatar": "/avatars/mike.jpg",
+      "grade": 2.1,
+      "credits": 12
+    },
+    {
+      "id": "4",
+      "name": "Sarah Wilson",
+      "studentId": "STU004",
+      "email": "sarah.wilson@university.edu",
+      "status": "pending",
+      "lastActivity": "5 hours ago",
+      "course": "CS301",
+      "avatar": "/avatars/sarah.jpg",
+      "grade": 3.6,
+      "credits": 16
+    },
+    {
+      "id": "5",
+      "name": "David Brown",
+      "studentId": "STU005",
+      "email": "david.brown@university.edu",
+      "status": "approved",
+      "lastActivity": "2 days ago",
+      "course": "CS201",
+      "avatar": "/avatars/david.jpg",
+      "grade": 3.4,
+      "credits": 15
+    },
+    {
+      "id": "6",
+      "name": "Emily Davis",
+      "studentId": "STU006",
+      "email": "emily.davis@university.edu",
+      "status": "approved",
+      "lastActivity": "1 hour ago",
+      "course": "CS301",
+      "avatar": "/avatars/emily.jpg",
+      "grade": 3.8,
+      "credits": 17
+    }
+  ],
+  "courses": [
+    {
+      "id": "1",
+      "name": "Computer Science Fundamentals",
+      "code": "CS101",
+      "students": 45,
+      "semester": "Fall 2024",
+      "description": "Introduction to computer science principles and programming.",
+      "instructor": "Dr. Sarah Johnson",
+      "credits": 3,
+      "schedule": "MWF 10:00-11:00 AM"
+    },
+    {
+      "id": "2",
+      "name": "Data Structures and Algorithms",
+      "code": "CS201",
+      "students": 38,
+      "semester": "Fall 2024",
+      "description": "Advanced programming concepts and algorithm design.",
+      "instructor": "Dr. Sarah Johnson",
+      "credits": 4,
+      "schedule": "TTh 2:00-3:30 PM"
+    },
+    {
+      "id": "3",
+      "name": "Database Management Systems",
+      "code": "CS301",
+      "students": 42,
+      "semester": "Fall 2024",
+      "description": "Database design, implementation, and management.",
+      "instructor": "Dr. Sarah Johnson",
+      "credits": 3,
+      "schedule": "MWF 1:00-2:00 PM"
+    }
+  ],
+  "notifications": [
+    {
+      "id": 1,
+      "type": "assignment",
+      "title": "New Assignment Submission",
+      "message": "John Doe submitted Assignment 3 for CS101",
+      "time": "5 minutes ago",
+      "unread": true,
+      "avatar": "/avatars/john.jpg"
+    },
+    {
+      "id": 2,
+      "type": "grade",
+      "title": "Grade Review Request",
+      "message": "Jane Smith requested a grade review for Midterm Exam",
+      "time": "1 hour ago",
+      "unread": true,
+      "avatar": "/avatars/jane.jpg"
+    },
+    {
+      "id": 3,
+      "type": "system",
+      "title": "System Maintenance",
+      "message": "Scheduled maintenance will occur this weekend",
+      "time": "2 hours ago",
+      "unread": false,
+      "avatar": null
+    },
+    {
+      "id": 4,
+      "type": "reminder",
+      "title": "Upcoming Deadline",
+      "message": "Final grades for CS201 are due in 3 days",
+      "time": "1 day ago",
+      "unread": false,
+      "avatar": null
+    },
+    {
+      "id": 5,
+      "type": "assignment",
+      "title": "Late Assignment Submission",
+      "message": "Mike Johnson submitted Assignment 2 (3 days late) for CS101",
+      "time": "2 days ago",
+      "unread": false,
+      "avatar": "/avatars/mike.jpg"
+    }
+  ],
+  "uploadHistory": [
+    {
+      "id": "1",
+      "name": "student_data_batch_1.csv",
+      "date": "2024-01-15",
+      "status": "completed",
+      "records": 150,
+      "size": "2.3 MB"
+    },
+    {
+      "id": "2",
+      "name": "grade_records.xlsx",
+      "date": "2024-01-14",
+      "status": "completed",
+      "records": 89,
+      "size": "1.8 MB"
+    },
+    {
+      "id": "3",
+      "name": "attendance_data.csv",
+      "date": "2024-01-13",
+      "status": "failed",
+      "records": 0,
+      "size": "856 KB",
+      "error": "Invalid format in row 45"
+    },
+    {
+      "id": "4",
+      "name": "enrollment_data.xlsx",
+      "date": "2024-01-12",
+      "status": "completed",
+      "records": 203,
+      "size": "3.1 MB"
+    }
+  ]
+}

@@ -5,9 +5,10 @@ import { useContext } from "react";
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { GraduationCap, BookUser, LogIn, UserPlus } from 'lucide-react';
+import { GraduationCap, BookUser, LogIn, UserPlus, Code } from 'lucide-react';
 import { LanguageContext } from '@/lib/language-context';
 import { AuthRedirectWrapper } from '@/components/auth/auth-redirect-wrapper';
+import { DEV_MODE } from '@/lib/dev-config';
 import {
   Select,
   SelectContent,
@@ -44,6 +45,19 @@ export default function Home() {
         <div className="absolute top-4 right-4">
           <LanguageSwitcher />
         </div>
+        
+        {/* Dev Mode Banner */}
+        {DEV_MODE.BYPASS_AUTH && (
+          <div className="fixed top-4 left-4 z-50">
+            <Button asChild variant="outline" className="bg-yellow-100 border-yellow-300 text-yellow-800 hover:bg-yellow-200">
+              <Link href="/dev-nav">
+                <Code className="mr-2 h-4 w-4" />
+                Dev Navigation
+              </Link>
+            </Button>
+          </div>
+        )}
+        
         <div className="text-center mb-12">
           <h1 className="font-headline text-4xl sm:text-5xl md:text-6xl font-bold text-primary">
             {translations.home.title}
