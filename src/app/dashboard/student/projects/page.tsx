@@ -4,7 +4,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { GitBranch, File as FileIcon, LogOut, ExternalLink, Trash2, Star } from "lucide-react";
+import { GitBranch, File as FileIcon, LogOut, ExternalLink, Trash2, Star, ArrowLeft } from "lucide-react";
 import { useEffect, useState, useContext } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { getFiles, removeFile, subscribe, StoredFile, getCurrentUserAaparId } from "@/lib/file-store";
@@ -55,22 +55,22 @@ export default function ProjectsPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center bg-background p-4 md:p-8">
-      <div className="w-full max-w-3xl">
-        <div className="mb-8 flex justify-between items-center">
-            <h1 className="text-3xl font-bold text-primary flex items-center gap-2">
-            <GitBranch className="h-8 w-8" />
-            {translations.projectsPage.title}
-            </h1>
-            <Button asChild>
-                <Link href="/dashboard/student">
-                    <LogOut className="mr-2" />
-                    {translations.projectsPage.backToDashboard}
-                </Link>
-            </Button>
+    <div className="min-h-screen bg-[#F8FAFC] p-4 md:p-6">
+      <div className="max-w-4xl mx-auto">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <GitBranch className="h-6 w-6 text-blue-600" />
+            <h1 className="text-2xl font-semibold text-gray-900">{translations.projectsPage.title}</h1>
+          </div>
+          <Button variant="outline" size="sm" asChild>
+            <Link href="/dashboard/student">
+              <ArrowLeft className="h-4 w-4 mr-1" />
+              Back
+            </Link>
+          </Button>
         </div>
         
-        <Card className="shadow-lg">
+        <Card className="bg-white shadow-sm border border-gray-100">
           <CardHeader>
             <CardTitle>{translations.projectsPage.uploadedFiles}</CardTitle>
           </CardHeader>

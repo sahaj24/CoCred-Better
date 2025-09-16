@@ -53,19 +53,19 @@ export default function ProfilePage() {
       <FacultyLayout>
         <div className="space-y-6">
           <div className="flex items-center justify-between">
-            <h1 className="text-3xl font-bold tracking-tight">Profile</h1>
+            <h1 className="text-2xl font-semibold text-gray-900">Profile</h1>
             {!editing ? (
-              <Button onClick={handleEdit}>
+              <Button variant="outline" size="sm" onClick={handleEdit}>
                 <Edit className="mr-2 h-4 w-4" />
-                Edit Profile
+                Edit
               </Button>
             ) : (
               <div className="flex gap-2">
-                <Button onClick={handleSave}>
+                <Button size="sm" onClick={handleSave}>
                   <Save className="mr-2 h-4 w-4" />
-                  Save Changes
+                  Save
                 </Button>
-                <Button variant="outline" onClick={handleCancel}>
+                <Button variant="outline" size="sm" onClick={handleCancel}>
                   <X className="mr-2 h-4 w-4" />
                   Cancel
                 </Button>
@@ -76,19 +76,19 @@ export default function ProfilePage() {
           <div className="grid gap-6 lg:grid-cols-3">
             {/* Profile Overview */}
             <div className="lg:col-span-1">
-              <Card>
+              <Card className="bg-white shadow-sm border border-gray-100">
                 <CardContent className="p-6">
                   <div className="flex flex-col items-center space-y-4">
-                    <Avatar className="h-32 w-32">
+                    <Avatar className="h-20 w-20">
                       <AvatarImage src="/avatars/professor.jpg" />
-                      <AvatarFallback className="text-2xl">
+                      <AvatarFallback className="text-lg font-semibold bg-blue-100 text-blue-600">
                         {profileData.name.split(' ').map(n => n[0]).join('')}
                       </AvatarFallback>
                     </Avatar>
                     
-                    <div className="text-center space-y-2">
-                      <h2 className="text-2xl font-bold">{profileData.name}</h2>
-                      <p className="text-muted-foreground">{profileData.department}</p>
+                    <div className="text-center space-y-1">
+                      <h2 className="text-lg font-semibold text-gray-900">{profileData.name}</h2>
+                      <p className="text-sm text-gray-600">{profileData.department}</p>
                     </div>
 
                     <div className="w-full space-y-3">

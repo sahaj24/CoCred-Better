@@ -7,6 +7,18 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import {
+  Modal,
+  ModalContent,
+  ModalDescription,
+  ModalFooter,
+  ModalHeader,
+  ModalTitle,
+  ModalTrigger,
+} from "@/components/ui/modal";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { 
   User, 
   LogOut, 
@@ -27,11 +39,13 @@ import {
   UserCheck,
   ClipboardList,
   BarChart,
-  Shield,
-  ChevronRight,
+  Upload,
+  Download,
+  X,
+  Check,
   FilePlus,
-  Trash2,
-  Upload
+  ChevronRight,
+  Trash2
 } from "lucide-react";
 import { getAllUserProfiles, getEvents, removeEvent } from "@/lib/file-store";
 import type { UserProfile, AppEvent, SupabaseUserProfile } from "@/lib/types";
@@ -54,8 +68,13 @@ import { supabase } from "@/lib/supabase";
 import { AuthorityRoute } from "@/components/auth/protected-route";
 import { getAuthorityFeatures, getAuthorityRole, hasPermission } from "@/lib/authority-roles";
 import { DEV_MODE, getMockProfile } from "@/lib/dev-config";
+import { FacultyAnalyticsPage } from '@/components/faculty/analytics-page';
+import { FacultyActivitiesPage } from '@/components/faculty/activities-page';
+import { FacultyTimelinePage } from '@/components/faculty/timeline-page';
+import { FacultySettingsPage } from '@/components/faculty/settings-page';
+import { FacultyFAQPage } from '@/components/faculty/faq-page';
 
-type NavigationTab = 'home' | 'dashboard' | 'students' | 'events' | 'certificates' | 'faculty' | 'analytics' | 'settings';
+type NavigationTab = 'home' | 'dashboard' | 'students' | 'events' | 'recent' | 'faculty' | 'analytics' | 'activities' | 'timeline' | 'settings' | 'faq';
 
 
 export default function AuthorityDashboard() {
@@ -144,15 +163,17 @@ export default function AuthorityDashboard() {
     { id: "home" as NavigationTab, label: "Home", icon: Home },
     { id: "dashboard" as NavigationTab, label: "Dashboard", icon: LayoutDashboard },
     ...(canManageStudents ? [{ id: "students" as NavigationTab, label: "Students", icon: Users }] : []),
+    { id: "activities" as NavigationTab, label: "Activities", icon: ClipboardList },
     ...(canCreateEvents ? [{ id: "events" as NavigationTab, label: "Events", icon: Calendar }] : []),
-    ...(canIssueCertificates || canApproveCertificates ? [{ id: "certificates" as NavigationTab, label: "Certificates", icon: Award }] : []),
+    ...(canIssueCertificates || canApproveCertificates ? [{ id: "recent" as NavigationTab, label: "Recent", icon: Clock }] : []),
+    { id: "timeline" as NavigationTab, label: "Timeline", icon: Clock },
     ...(canManageFaculty ? [{ id: "faculty" as NavigationTab, label: "Faculty", icon: UserCheck }] : []),
     ...(canViewAnalytics ? [{ id: "analytics" as NavigationTab, label: "Analytics", icon: BarChart }] : []),
     { id: "settings" as NavigationTab, label: "Settings", icon: Settings },
   ];
 
   const bottomNavigationItems = [
-    { id: "help", label: "Help", icon: HelpCircle },
+    { id: "faq", label: "FAQ & Help", icon: HelpCircle },
     { id: "logout", label: "Logout", icon: LogOut },
   ];
 
@@ -176,10 +197,10 @@ export default function AuthorityDashboard() {
 
       {/* Overview Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-card rounded-xl p-6 border">
+        <div className="bg-white rounded-xl p-6 border shadow-sm">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-muted-foreground">Total Students</p>
+              <p className="text-sm font-medium text-gray-600">Total Students</p>
               <p className="text-2xl font-semibold mt-1">{students.length}</p>
             </div>
             <div className="h-10 w-10 bg-blue-50 rounded-lg flex items-center justify-center">
@@ -188,10 +209,10 @@ export default function AuthorityDashboard() {
           </div>
         </div>
         
-        <div className="bg-card rounded-xl p-6 border">
+        <div className="bg-white rounded-xl p-6 border shadow-sm">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-muted-foreground">Active Events</p>
+              <p className="text-sm font-medium text-gray-600">Active Events</p>
               <p className="text-2xl font-semibold mt-1">{events.length}</p>
             </div>
             <div className="h-10 w-10 bg-green-50 rounded-lg flex items-center justify-center">
@@ -200,22 +221,22 @@ export default function AuthorityDashboard() {
           </div>
         </div>
         
-        <div className="bg-card rounded-xl p-6 border">
+        <div className="bg-white rounded-xl p-6 border shadow-sm">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-muted-foreground">Certificates</p>
-              <p className="text-2xl font-semibold mt-1">347</p>
+              <p className="text-sm font-medium text-gray-600">Recent Activity</p>
+              <p className="text-2xl font-semibold mt-1">24</p>
             </div>
             <div className="h-10 w-10 bg-purple-50 rounded-lg flex items-center justify-center">
-              <Award className="h-5 w-5 text-purple-600" />
+              <Clock className="h-5 w-5 text-purple-600" />
             </div>
           </div>
         </div>
 
-        <div className="bg-card rounded-xl p-6 border">
+        <div className="bg-white rounded-xl p-6 border shadow-sm">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-muted-foreground">Faculty Members</p>
+              <p className="text-sm font-medium text-gray-600">Faculty Members</p>
               <p className="text-2xl font-semibold mt-1">12</p>
             </div>
             <div className="h-10 w-10 bg-orange-50 rounded-lg flex items-center justify-center">
@@ -232,7 +253,7 @@ export default function AuthorityDashboard() {
           {canManageStudents && (
             <button 
               onClick={() => setActiveTab("students")}
-              className="text-left p-6 bg-card rounded-xl border hover:shadow-md transition-shadow"
+              className="text-left p-6 bg-white rounded-xl border shadow-sm hover:shadow-md transition-shadow"
             >
               <div className="flex items-start space-x-4">
                 <div className="h-10 w-10 bg-blue-50 rounded-lg flex items-center justify-center">
@@ -249,7 +270,7 @@ export default function AuthorityDashboard() {
           {canCreateEvents && (
             <button 
               onClick={() => setActiveTab("events")}
-              className="text-left p-6 bg-card rounded-xl border hover:shadow-md transition-shadow"
+              className="text-left p-6 bg-white rounded-xl border shadow-sm hover:shadow-md transition-shadow"
             >
               <div className="flex items-start space-x-4">
                 <div className="h-10 w-10 bg-green-50 rounded-lg flex items-center justify-center">
@@ -265,17 +286,17 @@ export default function AuthorityDashboard() {
 
           {(canIssueCertificates || canApproveCertificates) && (
             <button 
-              onClick={() => setActiveTab("certificates")}
-              className="text-left p-6 bg-card rounded-xl border hover:shadow-md transition-shadow"
+              onClick={() => setActiveTab("recent")}
+              className="text-left p-6 bg-white rounded-xl border shadow-sm hover:shadow-md transition-shadow"
             >
               <div className="flex items-start space-x-4">
                 <div className="h-10 w-10 bg-purple-50 rounded-lg flex items-center justify-center">
-                  <Award className="h-5 w-5 text-purple-600" />
+                  <Clock className="h-5 w-5 text-purple-600" />
                 </div>
                 <div>
-                  <h3 className="font-medium">{canIssueCertificates ? 'Issue Certificates' : 'Approve Certificates'}</h3>
+                  <h3 className="font-medium">Recent Activities</h3>
                   <p className="text-sm text-muted-foreground mt-1">
-                    {canIssueCertificates ? 'Generate official certificates' : 'Review and approve certificate requests'}
+                    View recent submissions and activities
                   </p>
                 </div>
               </div>
@@ -476,43 +497,178 @@ export default function AuthorityDashboard() {
     </div>
   );
 
-  const renderCertificatesContent = () => (
+  const renderRecentContent = () => (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Certificate Management</h2>
-        {canIssueCertificates && (
+        <h2 className="text-2xl font-bold">Recent Activities</h2>
+        <div className="flex items-center space-x-2">
+          <Modal>
+            <ModalTrigger asChild>
+              <Button variant="outline">
+                <Upload className="mr-2 h-4 w-4" />
+                Upload Document
+              </Button>
+            </ModalTrigger>
+            <ModalContent className="sm:max-w-[425px]">
+              <ModalHeader>
+                <ModalTitle>Upload Document</ModalTitle>
+                <ModalDescription>
+                  Upload a new document or certificate for processing
+                </ModalDescription>
+              </ModalHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="title" className="text-right">
+                    Title
+                  </Label>
+                  <Input
+                    id="title"
+                    placeholder="Document title..."
+                    className="col-span-3"
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="category" className="text-right">
+                    Category
+                  </Label>
+                  <select className="col-span-3 border border-gray-300 rounded-md px-3 py-2">
+                    <option value="">Select category...</option>
+                    <option value="certificate">Certificate</option>
+                    <option value="document">Official Document</option>
+                    <option value="transcript">Transcript</option>
+                  </select>
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="file" className="text-right">
+                    File
+                  </Label>
+                  <Input
+                    id="file"
+                    type="file"
+                    className="col-span-3"
+                    accept=".pdf,.doc,.docx,.jpg,.png"
+                  />
+                </div>
+              </div>
+              <ModalFooter>
+                <Button type="submit" className="bg-[#2161FF] hover:bg-blue-700">
+                  Upload Document
+                </Button>
+              </ModalFooter>
+            </ModalContent>
+          </Modal>
+          
           <Button>
-            <Award className="mr-2 h-4 w-4" />
-            Issue Certificate
+            <Clock className="mr-2 h-4 w-4" />
+            View All
           </Button>
-        )}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
-            <CardTitle>{canIssueCertificates ? 'Ready to Issue' : 'Pending Approvals'}</CardTitle>
+            <CardTitle>Recent Submissions</CardTitle>
             <CardDescription>
-              {canIssueCertificates 
-                ? 'Completed events ready for certificate generation' 
-                : 'Certificate requests awaiting your approval'}
+              Latest student submissions and applications
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
               {[
-                { event: "Web Development Workshop", participants: 28, status: "completed" },
-                { event: "AI/ML Bootcamp", participants: 35, status: "completed" },
-                { event: "Data Science Course", participants: 22, status: "completed" }
-              ].map((cert, index) => (
+                { student: "Aarav Sharma", activity: "Web Development Workshop", time: "2 hours ago", status: "pending" },
+                { student: "Priya Patel", activity: "AI/ML Bootcamp", time: "4 hours ago", status: "approved" },
+                { student: "Rahul Kumar", activity: "Data Science Course", time: "6 hours ago", status: "under_review" }
+              ].map((submission, index) => (
                 <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
                   <div>
-                    <p className="font-medium">{cert.event}</p>
-                    <p className="text-sm text-muted-foreground">{cert.participants} participants</p>
+                    <p className="font-medium">{submission.student}</p>
+                    <p className="text-sm text-muted-foreground">{submission.activity}</p>
+                    <p className="text-xs text-muted-foreground">{submission.time}</p>
                   </div>
-                  <Button size="sm">
-                    {canIssueCertificates ? 'Issue Certificates' : 'Approve Request'}
-                  </Button>
+                  <div className="flex items-center space-x-2">
+                    <Badge variant={submission.status === 'approved' ? 'default' : submission.status === 'pending' ? 'secondary' : 'outline'}>
+                      {submission.status.replace('_', ' ')}
+                    </Badge>
+                    
+                    {submission.status === 'pending' && (
+                      <>
+                        <Modal>
+                          <ModalTrigger asChild>
+                            <Button size="sm" variant="outline" className="text-green-600 border-green-200 hover:bg-green-50">
+                              <Check className="h-3 w-3 mr-1" />
+                              Approve
+                            </Button>
+                          </ModalTrigger>
+                          <ModalContent className="sm:max-w-[425px]">
+                            <ModalHeader>
+                              <ModalTitle>Approve Submission</ModalTitle>
+                              <ModalDescription>
+                                Approve {submission.student}'s submission for {submission.activity}
+                              </ModalDescription>
+                            </ModalHeader>
+                            <div className="grid gap-4 py-4">
+                              <div className="grid grid-cols-4 items-center gap-4">
+                                <Label htmlFor="feedback" className="text-right">
+                                  Feedback
+                                </Label>
+                                <Textarea 
+                                  id="feedback"
+                                  placeholder="Optional feedback for the student..."
+                                  className="col-span-3"
+                                />
+                              </div>
+                            </div>
+                            <ModalFooter>
+                              <Button type="submit" className="bg-[#2161FF] hover:bg-blue-700">
+                                Approve Submission
+                              </Button>
+                            </ModalFooter>
+                          </ModalContent>
+                        </Modal>
+
+                        <Modal>
+                          <ModalTrigger asChild>
+                            <Button size="sm" variant="outline" className="text-red-600 border-red-200 hover:bg-red-50">
+                              <X className="h-3 w-3 mr-1" />
+                              Reject
+                            </Button>
+                          </ModalTrigger>
+                          <ModalContent className="sm:max-w-[425px]">
+                            <ModalHeader>
+                              <ModalTitle>Reject Submission</ModalTitle>
+                              <ModalDescription>
+                                Reject {submission.student}'s submission for {submission.activity}
+                              </ModalDescription>
+                            </ModalHeader>
+                            <div className="grid gap-4 py-4">
+                              <div className="grid grid-cols-4 items-center gap-4">
+                                <Label htmlFor="reason" className="text-right">
+                                  Reason
+                                </Label>
+                                <Textarea 
+                                  id="reason"
+                                  placeholder="Please provide a reason for rejection..."
+                                  className="col-span-3"
+                                  required
+                                />
+                              </div>
+                            </div>
+                            <ModalFooter>
+                              <Button type="submit" variant="destructive">
+                                Reject Submission
+                              </Button>
+                            </ModalFooter>
+                          </ModalContent>
+                        </Modal>
+                      </>
+                    )}
+                    
+                    <Button size="sm" variant="outline">
+                      <Eye className="h-3 w-3 mr-1" />
+                      View
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -521,21 +677,21 @@ export default function AuthorityDashboard() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Certificate Statistics</CardTitle>
+            <CardTitle>Activity Statistics</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               <div className="flex justify-between">
-                <span className="text-sm">Total Issued</span>
-                <span className="font-medium">347</span>
+                <span className="text-sm">Today</span>
+                <span className="font-medium">12</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-sm">This Month</span>
-                <span className="font-medium">28</span>
+                <span className="text-sm">This Week</span>
+                <span className="font-medium">47</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-sm">Pending</span>
-                <span className="font-medium">15</span>
+                <span className="text-sm">Pending Review</span>
+                <span className="font-medium">8</span>
               </div>
             </div>
           </CardContent>
@@ -738,16 +894,22 @@ export default function AuthorityDashboard() {
         return renderDashboardContent();
       case 'students':
         return canManageStudents ? renderStudentsContent() : renderHomeContent();
+      case 'activities':
+        return <FacultyActivitiesPage />;
       case 'events':
         return canCreateEvents ? renderEventsContent() : renderHomeContent();
-      case 'certificates':
-        return (canIssueCertificates || canApproveCertificates) ? renderCertificatesContent() : renderHomeContent();
+      case 'recent':
+        return (canIssueCertificates || canApproveCertificates) ? renderRecentContent() : renderHomeContent();
+      case 'timeline':
+        return <FacultyTimelinePage />;
       case 'faculty':
         return canManageFaculty ? renderFacultyContent() : renderHomeContent();
       case 'analytics':
-        return canViewAnalytics ? renderAnalyticsContent() : renderHomeContent();
+        return canViewAnalytics ? <FacultyAnalyticsPage /> : renderHomeContent();
       case 'settings':
-        return renderSettingsContent();
+        return <FacultySettingsPage />;
+      case 'faq':
+        return <FacultyFAQPage />;
       default:
         return renderHomeContent();
     }
@@ -755,7 +917,7 @@ export default function AuthorityDashboard() {
 
   return (
     <AuthorityRoute>
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-white">
         {/* Header (64px height) */}
         <div className="bg-white border-b border-gray-200 px-6 py-4 h-16">
           <div className="flex items-center justify-between h-full">
@@ -835,6 +997,8 @@ export default function AuthorityDashboard() {
                         if (item.id === 'logout') {
                           // Handle logout
                           window.location.href = '/';
+                        } else if (item.id === 'faq') {
+                          setActiveTab('faq');
                         }
                       }}
                       className="w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-left text-gray-700 hover:bg-gray-100 transition-colors"

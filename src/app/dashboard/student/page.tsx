@@ -8,8 +8,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { 
   LogOut, 
   User, 
-  Upload, 
-  Download, 
+  Upload,
+  Download,
   QrCode, 
   Settings,
   HelpCircle,
@@ -24,7 +24,12 @@ import {
   Share2,
   Folder,
   Bell,
-  LayoutDashboard
+  LayoutDashboard,
+  Activity,
+  Clock,
+  Trophy,
+  CheckCircle,
+  TrendingUp
 } from "lucide-react";
 import { useState, useContext } from "react";
 import { LanguageContext } from "@/lib/language-context";
@@ -54,9 +59,16 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { UploadPage } from '@/components/upload/upload-page';
-import { DownloadPage } from '@/components/download/download-page';
+import { SharePortfolioPage } from '@/components/portfolio/share-portfolio-page';
+import { ActivitiesPage } from '@/components/activities/activities-page';
+import { TimelinePage } from '@/components/timeline/timeline-page';
+import { QRGeneratorPage } from '@/components/qr/qr-generator-page';
+import { SettingsPage } from '@/components/settings/settings-page';
+import { FAQPage } from '@/components/faq/faq-page';
+import StudentProfilePage from '@/components/profile/student-profile-page';
+import { AddActivityModal } from '@/components/activities/add-activity-modal';
 
-type NavigationTab = "profile" | "dashboard" | "upload" | "download" | "qr" | "share" | "settings" | "help";
+type NavigationTab = "profile" | "dashboard" | "upload" | "activities" | "timeline" | "qr" | "share" | "settings" | "faq";
 type CertificateStatus = "pending" | "approved" | "rejected";
 type CertificateType = "certificate" | "internship" | "project" | "workshop";
 
@@ -198,18 +210,19 @@ function StudentDashboardContent() {
     { id: "profile" as NavigationTab, label: "Profile", icon: User },
     { id: "dashboard" as NavigationTab, label: "Dashboard", icon: LayoutDashboard },
     { id: "upload" as NavigationTab, label: "Upload", icon: Upload },
-    { id: "download" as NavigationTab, label: "Download", icon: Download },
+    { id: "activities" as NavigationTab, label: "Activities", icon: Activity },
+    { id: "timeline" as NavigationTab, label: "Timeline", icon: Clock },
     { id: "qr" as NavigationTab, label: "Generate QR", icon: QrCode },
     { id: "share" as NavigationTab, label: "Share Portfolio", icon: Share2 },
   ];
 
   const bottomNavigationItems = [
-    { id: "help" as NavigationTab, label: "Help / FAQ", icon: HelpCircle },
+    { id: "faq" as NavigationTab, label: "Help / FAQ", icon: HelpCircle },
     { id: "settings" as NavigationTab, label: "Settings", icon: Settings },
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       {/* Header (64px height) */}
       <div className="bg-white border-b border-gray-200 px-6 py-4 h-16">
         <div className="flex items-center justify-between h-full">
@@ -287,7 +300,7 @@ function StudentDashboardContent() {
                     className={`
                       w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-left transition-all duration-200
                       ${isActive 
-                        ? "bg-blue-50 text-[#2161FF] border-l-4 border-[#2161FF]" 
+                        ? "bg-white text-[#2161FF] border-l-4 border-[#2161FF] shadow-sm" 
                         : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                       }
                     `}
@@ -316,7 +329,7 @@ function StudentDashboardContent() {
                     className={`
                       w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-left transition-all duration-200
                       ${isActive 
-                        ? "bg-blue-50 text-[#2161FF] border-l-4 border-[#2161FF]" 
+                        ? "bg-white text-[#2161FF] border-l-4 border-[#2161FF] shadow-sm" 
                         : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                       }
                     `}
@@ -345,6 +358,11 @@ function StudentDashboardContent() {
 
         {/* Right Content Area (74% width, responsive) */}
         <div className="flex-1 p-6 overflow-auto bg-[#F8FAFC]">
+          {/* Profile Tab Content */}
+          {activeTab === "profile" && (
+            <StudentProfilePage />
+          )}
+
           {activeTab === "dashboard" && (
             <div className="space-y-6">
               {/* Two-Card Upload Grid */}
@@ -398,17 +416,11 @@ function StudentDashboardContent() {
                 <Card className="bg-white shadow-sm hover:shadow-md transition-shadow rounded-xl border border-gray-100 cursor-pointer">
                   <CardContent className="p-6">
                     <div className="text-center">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-3">Download & Manage</h3>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-3">Share & Manage</h3>
                       <p className="text-sm text-gray-500 mb-4">
-                        Download your documents and manage your portfolio
+                        Generate QR codes and share your portfolio
                       </p>
                       <div className="flex justify-center space-x-6 mb-4">
-                        <div className="flex flex-col items-center space-y-1">
-                          <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                            <Download className="h-5 w-5 text-blue-600" />
-                          </div>
-                          <span className="text-xs text-gray-600">Download</span>
-                        </div>
                         <div className="flex flex-col items-center space-y-1">
                           <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
                             <QrCode className="h-5 w-5 text-indigo-600" />
@@ -423,135 +435,146 @@ function StudentDashboardContent() {
                         </div>
                       </div>
                       <Button onClick={() => {
-                        // TODO: Navigate to download/manage page
-                        console.log('Navigate to download page');
+                        setActiveTab("share");
                       }} variant="outline" className="border-[#2161FF] text-[#2161FF] hover:bg-blue-50">
                         <Folder className="h-4 w-4 mr-2" />
-                        Manage Files
+                        Share Portfolio
                       </Button>
                     </div>
                   </CardContent>
                 </Card>
               </div>
 
-              {/* Certificates List */}
+              {/* Recent Activities */}
               <Card className="bg-white shadow-sm hover:shadow-md transition-shadow rounded-xl border border-gray-100">
                 <CardHeader>
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-xl text-gray-900">Certificates List</CardTitle>
-                    <div className="flex items-center space-x-3">
-                      <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                        <Input 
-                          placeholder="Search certificates..."
-                          value={searchTerm}
-                          onChange={(e) => setSearchTerm(e.target.value)}
-                          className="pl-10 w-64 focus:border-[#2161FF] focus:ring-[#2161FF]"
-                        />
-                      </div>
-                      {selectedCertificates.length > 0 && (
-                        <Button size="sm" variant="outline" className="text-red-600 hover:bg-red-50 border-red-200">
-                          <Trash2 className="h-4 w-4 mr-1" />
-                          Delete ({selectedCertificates.filter(id => selectableIds.includes(id)).length})
-                        </Button>
-                      )}
-                    </div>
+                    <CardTitle className="text-xl text-gray-900 flex items-center gap-3">
+                      <Clock className="h-5 w-5 text-blue-600" />
+                      Recent Activities
+                    </CardTitle>
+                    <Button 
+                      onClick={() => setActiveTab("activities")}
+                      variant="outline" 
+                      size="sm"
+                      className="border-blue-200 text-blue-600 hover:bg-blue-50"
+                    >
+                      View All Activities
+                    </Button>
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-12">
-                          {selectableCertificates.length > 0 && (
-                            <Checkbox 
-                              checked={selectableIds.length > 0 && selectableIds.every(id => selectedCertificates.includes(id))}
-                              onCheckedChange={handleSelectAll}
-                            />
-                          )}
-                        </TableHead>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Type</TableHead>
-                        <TableHead>Event/Body</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Date</TableHead>
-                        <TableHead></TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredCertificates.map((cert) => (
-                        <TableRow key={cert.id} className="hover:bg-gray-50">
-                          <TableCell>
-                            {cert.status !== "approved" && (
-                              <Checkbox 
-                                checked={selectedCertificates.includes(cert.id)}
-                                onCheckedChange={() => handleCertificateSelect(cert.id)}
-                              />
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center space-x-3">
-                              {getDocumentIcon(cert.type)}
-                              <span className="font-medium">{cert.name}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 capitalize">
-                              {cert.type}
-                            </span>
-                          </TableCell>
-                          <TableCell className="text-gray-600">{cert.event}</TableCell>
-                          <TableCell>{getStatusBadge(cert.status)}</TableCell>
-                          <TableCell className="text-gray-500">
-                            {new Date(cert.date).toLocaleDateString()}
-                          </TableCell>
-                          <TableCell>
-                            <TooltipProvider>
-                              <div className="flex space-x-1">
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
-                                      <Eye className="h-4 w-4" />
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>View</TooltipContent>
-                                </Tooltip>
-                                
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
-                                      <Download className="h-4 w-4" />
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>Download</TooltipContent>
-                                </Tooltip>
-                                
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
-                                      <QrCode className="h-4 w-4" />
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>Generate QR</TooltipContent>
-                                </Tooltip>
-                                
-                                {cert.status !== "approved" && (
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-red-500 hover:text-red-700">
-                                        <Trash2 className="h-4 w-4" />
-                                      </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>Delete</TooltipContent>
-                                  </Tooltip>
-                                )}
-                              </div>
-                            </TooltipProvider>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                  <div className="space-y-4">
+                    {/* Quick Stats Row */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                      <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-xl border border-blue-200">
+                        <div className="flex items-center gap-3">
+                          <Award className="h-5 w-5 text-blue-600" />
+                          <div>
+                            <p className="text-sm font-medium text-blue-700">Pending</p>
+                            <p className="text-2xl font-bold text-blue-800">3</p>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-xl border border-green-200">
+                        <div className="flex items-center gap-3">
+                          <CheckCircle className="h-5 w-5 text-green-600" />
+                          <div>
+                            <p className="text-sm font-medium text-green-700">Approved</p>
+                            <p className="text-2xl font-bold text-green-800">12</p>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-xl border border-purple-200">
+                        <div className="flex items-center gap-3">
+                          <Briefcase className="h-5 w-5 text-purple-600" />
+                          <div>
+                            <p className="text-sm font-medium text-purple-700">This Month</p>
+                            <p className="text-2xl font-bold text-purple-800">5</p>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-4 rounded-xl border border-orange-200">
+                        <div className="flex items-center gap-3">
+                          <TrendingUp className="h-5 w-5 text-orange-600" />
+                          <div>
+                            <p className="text-sm font-medium text-orange-700">Total</p>
+                            <p className="text-2xl font-bold text-orange-800">28</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Recent Activities List */}
+                    <div className="space-y-3">
+                      <h4 className="font-medium text-gray-900 mb-3">Latest Submissions</h4>
+                      
+                      {/* Activity Item 1 */}
+                      <div className="flex items-start gap-4 p-4 bg-white border border-gray-200 rounded-lg hover:shadow-sm transition-shadow">
+                        <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                          <Award className="h-5 w-5 text-blue-600" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between">
+                            <h5 className="font-medium text-gray-900 truncate">Machine Learning Certificate</h5>
+                            <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">Pending</Badge>
+                          </div>
+                          <p className="text-sm text-gray-600 mt-1">Coursera - Stanford University</p>
+                          <p className="text-xs text-gray-500 mt-2">Submitted 2 days ago</p>
+                        </div>
+                        <Button size="sm" variant="ghost" className="text-blue-600 hover:bg-blue-50">
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      </div>
+
+                      {/* Activity Item 2 */}
+                      <div className="flex items-start gap-4 p-4 bg-white border border-gray-200 rounded-lg hover:shadow-sm transition-shadow">
+                        <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                          <CheckCircle className="h-5 w-5 text-green-600" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between">
+                            <h5 className="font-medium text-gray-900 truncate">Web Development Internship</h5>
+                            <Badge className="bg-green-100 text-green-800 border-green-200">Approved</Badge>
+                          </div>
+                          <p className="text-sm text-gray-600 mt-1">TechCorp Inc. - 3 months</p>
+                          <p className="text-xs text-gray-500 mt-2">Approved 1 week ago</p>
+                        </div>
+                        <Button size="sm" variant="ghost" className="text-green-600 hover:bg-green-50">
+                          <Download className="h-4 w-4" />
+                        </Button>
+                      </div>
+
+                      {/* Activity Item 3 */}
+                      <div className="flex items-start gap-4 p-4 bg-white border border-gray-200 rounded-lg hover:shadow-sm transition-shadow">
+                        <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                          <Briefcase className="h-5 w-5 text-purple-600" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between">
+                            <h5 className="font-medium text-gray-900 truncate">React Portfolio Project</h5>
+                            <Badge className="bg-blue-100 text-blue-800 border-blue-200">Under Review</Badge>
+                          </div>
+                          <p className="text-sm text-gray-600 mt-1">Personal Project - Frontend Development</p>
+                          <p className="text-xs text-gray-500 mt-2">Submitted 5 days ago</p>
+                        </div>
+                        <Button size="sm" variant="ghost" className="text-purple-600 hover:bg-purple-50">
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      </div>
+
+                      {/* Quick Action to Add New Activity */}
+                      <AddActivityModal>
+                        <div className="mt-4 p-4 border-2 border-dashed border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors cursor-pointer">
+                          <div className="text-center">
+                            <Plus className="h-6 w-6 text-gray-400 mx-auto mb-2" />
+                            <p className="text-sm text-gray-600">Add New Activity</p>
+                            <p className="text-xs text-gray-500">Click to log a new certificate, project, or internship</p>
+                          </div>
+                        </div>
+                      </AddActivityModal>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             </div>
@@ -562,13 +585,38 @@ function StudentDashboardContent() {
             <UploadPage />
           )}
 
-          {/* Download Tab Content */}
-          {activeTab === "download" && (
-            <DownloadPage />
+          {/* Share Portfolio Tab Content */}
+          {activeTab === "share" && (
+            <SharePortfolioPage />
+          )}
+
+          {/* Activities Tab Content */}
+          {activeTab === "activities" && (
+            <ActivitiesPage />
+          )}
+
+          {/* Timeline Tab Content */}
+          {activeTab === "timeline" && (
+            <TimelinePage />
+          )}
+
+          {/* QR Generator Tab Content */}
+          {activeTab === "qr" && (
+            <QRGeneratorPage />
+          )}
+
+          {/* Settings Tab Content */}
+          {activeTab === "settings" && (
+            <SettingsPage />
+          )}
+
+          {/* FAQ Tab Content */}
+          {activeTab === "faq" && (
+            <FAQPage />
           )}
 
           {/* Other tab content */}
-          {activeTab !== "dashboard" && activeTab !== "upload" && activeTab !== "download" && (
+          {activeTab !== "profile" && activeTab !== "dashboard" && activeTab !== "upload" && activeTab !== "share" && activeTab !== "activities" && activeTab !== "timeline" && activeTab !== "qr" && activeTab !== "settings" && activeTab !== "faq" && (
             <div className="text-center py-12">
               <h2 className="text-2xl font-semibold text-gray-900 mb-2">
                 {[...navigationItems, ...bottomNavigationItems].find(item => item.id === activeTab)?.label}

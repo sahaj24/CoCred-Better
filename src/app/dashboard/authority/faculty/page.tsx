@@ -61,164 +61,274 @@ export default function FacultyPortal() {
   const renderHomeContent = () => (
     <div className="space-y-8">
       {/* Welcome Section */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold tracking-tight">Good morning, Event Organizer</h1>
-        <p className="text-muted-foreground mt-1">Manage your events, approvals, and participants from here.</p>
-      </div>
-
-      {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-card rounded-xl p-6 border">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">My Events</p>
-              <p className="text-2xl font-semibold mt-1">8</p>
-            </div>
-            <div className="h-10 w-10 bg-blue-50 rounded-lg flex items-center justify-center">
-              <Calendar className="h-5 w-5 text-blue-600" />
-            </div>
+      <div className="mb-8">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Faculty Dashboard</h1>
+            <p className="text-gray-600 mt-1">Manage events, approvals, and student activities</p>
           </div>
-        </div>
-        
-        <div className="bg-card rounded-xl p-6 border">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Pending Approvals</p>
-              <p className="text-2xl font-semibold mt-1">15</p>
-            </div>
-            <div className="h-10 w-10 bg-orange-50 rounded-lg flex items-center justify-center">
-              <UserCheck className="h-5 w-5 text-orange-600" />
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-card rounded-xl p-6 border">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Total Participants</p>
-              <p className="text-2xl font-semibold mt-1">{students.length + 45}</p>
-            </div>
-            <div className="h-10 w-10 bg-green-50 rounded-lg flex items-center justify-center">
-              <Users className="h-5 w-5 text-green-600" />
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-card rounded-xl p-6 border">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Certificate Approvals</p>
-              <p className="text-2xl font-semibold mt-1">23</p>
-            </div>
-            <div className="h-10 w-10 bg-purple-50 rounded-lg flex items-center justify-center">
-              <CheckCircle className="h-5 w-5 text-purple-600" />
-            </div>
+          <div className="flex items-center gap-3">
+            <Button variant="outline" className="border-blue-200 text-blue-600 hover:bg-blue-50">
+              <Bell className="h-4 w-4 mr-2" />
+              Notifications
+            </Button>
+            <Button 
+              onClick={() => setActiveTab("events")}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add Event
+            </Button>
           </div>
         </div>
       </div>
 
-      {/* Quick Actions */}
-      <div>
-        <h2 className="text-lg font-medium mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <button 
-            onClick={() => setActiveTab("events")}
-            className="text-left p-6 bg-card rounded-xl border hover:shadow-md transition-shadow"
-          >
-            <div className="flex items-start space-x-4">
-              <div className="h-10 w-10 bg-blue-50 rounded-lg flex items-center justify-center">
-                <Plus className="h-5 w-5 text-blue-600" />
-              </div>
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <Card className="bg-white shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
               <div>
-                <h3 className="font-medium">Create New Event</h3>
-                <p className="text-sm text-muted-foreground mt-1">Organize workshops, competitions, and seminars</p>
+                <p className="text-sm font-medium text-gray-600">Total Events</p>
+                <p className="text-3xl font-bold text-gray-900 mt-1">{events.length}</p>
+                <p className="text-xs text-green-600 mt-1">+2 this month</p>
               </div>
-            </div>
-          </button>
-          
-          <button 
-            onClick={() => setActiveTab("approvals")}
-            className="text-left p-6 bg-card rounded-xl border hover:shadow-md transition-shadow"
-          >
-            <div className="flex items-start space-x-4">
-              <div className="h-10 w-10 bg-orange-50 rounded-lg flex items-center justify-center">
-                <ClipboardList className="h-5 w-5 text-orange-600" />
-              </div>
-              <div>
-                <h3 className="font-medium">Review Approvals</h3>
-                <p className="text-sm text-muted-foreground mt-1">Approve student registrations and submissions</p>
-              </div>
-            </div>
-          </button>
-          
-          <button 
-            onClick={() => setActiveTab("approvals")}
-            className="text-left p-6 bg-card rounded-xl border hover:shadow-md transition-shadow"
-          >
-            <div className="flex items-start space-x-4">
-              <div className="h-10 w-10 bg-green-50 rounded-lg flex items-center justify-center">
-                <CheckCircle className="h-5 w-5 text-green-600" />
-              </div>
-              <div>
-                <h3 className="font-medium">Approve Certificates</h3>
-                <p className="text-sm text-muted-foreground mt-1">Review and approve certificate requests</p>
-              </div>
-            </div>
-          </button>
-        </div>
-      </div>
-
-      {/* Recent Activity & Pending Tasks */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Recent Activity</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              <div className="flex items-center space-x-3 text-sm">
-                <CheckCircle className="h-4 w-4 text-green-600" />
-                <span>Approved 5 new registrations for "Tech Workshop"</span>
-              </div>
-              <div className="flex items-center space-x-3 text-sm">
-                <Award className="h-4 w-4 text-purple-600" />
-                <span>Approved 8 certificate requests for "Web Dev Workshop"</span>
-              </div>
-              <div className="flex items-center space-x-3 text-sm">
-                <Calendar className="h-4 w-4 text-blue-600" />
-                <span>Created new event "AI Workshop Series"</span>
+              <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center">
+                <Calendar className="h-6 w-6 text-blue-600" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Pending Tasks</CardTitle>
+        <Card className="bg-white shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Active Students</p>
+                <p className="text-3xl font-bold text-gray-900 mt-1">{students.length}</p>
+                <p className="text-xs text-green-600 mt-1">+12 this week</p>
+              </div>
+              <div className="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center">
+                <Users className="h-6 w-6 text-green-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Pending Approvals</p>
+                <p className="text-3xl font-bold text-gray-900 mt-1">24</p>
+                <p className="text-xs text-orange-600 mt-1">Needs attention</p>
+              </div>
+              <div className="w-12 h-12 bg-orange-50 rounded-xl flex items-center justify-center">
+                <Clock className="h-6 w-6 text-orange-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Certificates Issued</p>
+                <p className="text-3xl font-bold text-gray-900 mt-1">156</p>
+                <p className="text-xs text-green-600 mt-1">+18 this month</p>
+              </div>
+              <div className="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center">
+                <Award className="h-6 w-6 text-purple-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Quick Actions */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <button 
+          onClick={() => setActiveTab("events")}
+          className="p-6 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200 hover:shadow-md transition-all text-left group"
+        >
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+              <Calendar className="h-5 w-5 text-white" />
+            </div>
+            <div className="text-blue-600">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+          </div>
+          <h3 className="font-semibold text-blue-900">Manage Events</h3>
+          <p className="text-sm text-blue-700 mt-1">Create and organize workshops</p>
+        </button>
+        
+        <button 
+          onClick={() => setActiveTab("approvals")}
+          className="p-6 bg-gradient-to-br from-green-50 to-green-100 rounded-xl border border-green-200 hover:shadow-md transition-all text-left group"
+        >
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+              <CheckCircle className="h-5 w-5 text-white" />
+            </div>
+            <div className="text-green-600">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+          </div>
+          <h3 className="font-semibold text-green-900">Approve Certificates</h3>
+          <p className="text-sm text-green-700 mt-1">Review certificate requests</p>
+        </button>
+
+        <button 
+          onClick={() => setActiveTab("participants")}
+          className="p-6 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border border-purple-200 hover:shadow-md transition-all text-left group"
+        >
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+              <Users className="h-5 w-5 text-white" />
+            </div>
+            <div className="text-purple-600">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+          </div>
+          <h3 className="font-semibold text-purple-900">View Participants</h3>
+          <p className="text-sm text-purple-700 mt-1">Manage student registrations</p>
+        </button>
+
+        <button 
+          onClick={() => setActiveTab("dashboard")}
+          className="p-6 bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl border border-orange-200 hover:shadow-md transition-all text-left group"
+        >
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-10 h-10 bg-orange-500 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+              <BarChart className="h-5 w-5 text-white" />
+            </div>
+            <div className="text-orange-600">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+          </div>
+          <h3 className="font-semibold text-orange-900">Analytics</h3>
+          <p className="text-sm text-orange-700 mt-1">View detailed statistics</p>
+        </button>
+      </div>
+
+      {/* Recent Activity & Pending Tasks */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="bg-white shadow-sm border border-gray-100">
+          <CardHeader className="pb-4">
+            <CardTitle className="flex items-center gap-3">
+              <Clock className="h-5 w-5 text-blue-600" />
+              Recent Activity
+            </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <Clock className="h-4 w-4 text-orange-600" />
-                  <span className="text-sm">15 registration approvals</span>
-                </div>
-                <Button size="sm" variant="outline">Review</Button>
+          <CardContent className="space-y-4">
+            <div className="flex items-start gap-3 p-3 bg-green-50 rounded-lg border border-green-100">
+              <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                <CheckCircle className="h-4 w-4 text-white" />
               </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <Award className="h-4 w-4 text-purple-600" />
-                  <span className="text-sm">3 certificates to approve</span>
-                </div>
-                <Button size="sm" variant="outline">Issue</Button>
+              <div className="flex-1">
+                <p className="text-sm font-medium text-green-900">Certificates Approved</p>
+                <p className="text-xs text-green-700 mt-1">5 certificates approved for "Web Development Workshop"</p>
+                <p className="text-xs text-green-600 mt-1">2 minutes ago</p>
               </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <Eye className="h-4 w-4 text-blue-600" />
-                  <span className="text-sm">Review event feedback</span>
-                </div>
-                <Button size="sm" variant="outline">View</Button>
+            </div>
+            
+            <div className="flex items-start gap-3 p-3 bg-blue-50 rounded-lg border border-blue-100">
+              <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                <Calendar className="h-4 w-4 text-white" />
               </div>
+              <div className="flex-1">
+                <p className="text-sm font-medium text-blue-900">New Event Created</p>
+                <p className="text-xs text-blue-700 mt-1">Created "AI Workshop Series" with 50 seats</p>
+                <p className="text-xs text-blue-600 mt-1">1 hour ago</p>
+              </div>
+            </div>
+            
+            <div className="flex items-start gap-3 p-3 bg-purple-50 rounded-lg border border-purple-100">
+              <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                <Users className="h-4 w-4 text-white" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-medium text-purple-900">Student Registrations</p>
+                <p className="text-xs text-purple-700 mt-1">12 new registrations for upcoming events</p>
+                <p className="text-xs text-purple-600 mt-1">3 hours ago</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white shadow-sm border border-gray-100">
+          <CardHeader className="pb-4">
+            <CardTitle className="flex items-center gap-3">
+              <ClipboardList className="h-5 w-5 text-orange-600" />
+              Pending Tasks
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between p-3 bg-orange-50 rounded-lg border border-orange-100">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
+                  <Clock className="h-4 w-4 text-white" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-orange-900">Registration Approvals</p>
+                  <p className="text-xs text-orange-700">15 pending approvals</p>
+                </div>
+              </div>
+              <Button 
+                size="sm" 
+                className="bg-orange-600 hover:bg-orange-700 text-white"
+                onClick={() => setActiveTab("approvals")}
+              >
+                Review
+              </Button>
+            </div>
+            
+            <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg border border-purple-100">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
+                  <Award className="h-4 w-4 text-white" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-purple-900">Certificate Approvals</p>
+                  <p className="text-xs text-purple-700">8 certificates to review</p>
+                </div>
+              </div>
+              <Button 
+                size="sm" 
+                className="bg-purple-600 hover:bg-purple-700 text-white"
+                onClick={() => setActiveTab("approvals")}
+              >
+                Issue
+              </Button>
+            </div>
+            
+            <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-100">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                  <FileText className="h-4 w-4 text-white" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-blue-900">Event Feedback</p>
+                  <p className="text-xs text-blue-700">3 events awaiting review</p>
+                </div>
+              </div>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                className="border-blue-200 text-blue-600 hover:bg-blue-50"
+              >
+                View
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -556,7 +666,7 @@ export default function FacultyPortal() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       {/* Header (64px height) */}
       <div className="bg-white border-b border-gray-200 px-6 py-4 h-16">
         <div className="flex items-center justify-between h-full">
@@ -615,7 +725,7 @@ export default function FacultyPortal() {
                     className={`
                       w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-left transition-all duration-200
                       ${isActive 
-                        ? "bg-blue-50 text-[#2161FF] border-l-4 border-[#2161FF]" 
+                        ? "bg-white text-[#2161FF] border-l-4 border-[#2161FF] shadow-sm" 
                         : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                       }
                     `}
