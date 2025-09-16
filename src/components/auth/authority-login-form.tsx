@@ -77,7 +77,7 @@ export function AuthorityLoginForm() {
         });
         // Redirect based on role parameter
         if (isFaculty) {
-          router.push("/dashboard/authority?role=faculty");
+          router.push("/dashboard/faculty");
         } else {
           router.push("/dashboard/authority");
         }

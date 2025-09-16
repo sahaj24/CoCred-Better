@@ -43,8 +43,8 @@ export async function createOrGetFacultyClassCode(userId: string) {
       .eq('id', existingFaculty.id);
     if (upErr) throw upErr;
 
-    // Ensure classroom row exists
-    await supabase.from('classrooms').insert({ faculty_id: existingFaculty.id, class_code: classCode });
+    // Ensure classroom row exists (upsert to avoid duplicates)
+    await supabase.from('classrooms').upsert({ faculty_id: existingFaculty.id, class_code: classCode }, { onConflict: 'class_code' });
     return classCode;
   }
 
@@ -70,10 +70,10 @@ export async function createOrGetFacultyClassCode(userId: string) {
     .single();
   if (insertErr) throw insertErr;
 
-  // Insert classroom row mirroring faculty (optional but keeps schema consistent)
+  // Insert classroom row mirroring faculty
   await supabase
     .from('classrooms')
-    .insert({ faculty_id: newFaculty.id, class_code: classCode });
+    .upsert({ faculty_id: newFaculty.id, class_code: classCode }, { onConflict: 'class_code' });
 
   return newFaculty.class_code;
 }
