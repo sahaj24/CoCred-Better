@@ -159,8 +159,6 @@ export function ProtectedRoute({
   if (!user || !session || (!userProfile && !DEV_MODE.BYPASS_AUTH)) {
     return null;
   }
-    return null;
-  }
 
   return <>{children}</>;
 }
