@@ -104,6 +104,11 @@ CREATE POLICY certificate_student_select ON public.certificates
   FOR SELECT USING ( auth.uid() = (
     SELECT user_id FROM public.students s WHERE s.id = student_id
   ));
+-- Student can insert their own certificates
+CREATE POLICY certificate_student_insert ON public.certificates
+  FOR INSERT WITH CHECK ( auth.uid() = (
+    SELECT user_id FROM public.students s WHERE s.id = student_id
+  ));
 -- Faculty can see certificates for their classroom
 CREATE POLICY certificate_faculty_select ON public.certificates
   FOR SELECT USING (

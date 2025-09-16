@@ -31,7 +31,7 @@ import {
   CheckCircle,
   TrendingUp
 } from "lucide-react";
-import { useState, useContext } from "react";
+import { useState, useContext, useEffect } from "react";
 import { LanguageContext } from "@/lib/language-context";
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import { useAuth } from "@/lib/auth-context";
@@ -67,6 +67,7 @@ import { SettingsPage } from '@/components/settings/settings-page';
 import { FAQPage } from '@/components/faq/faq-page';
 import StudentProfilePage from '@/components/profile/student-profile-page';
 import { AddActivityModal } from '@/components/activities/add-activity-modal';
+import { listStudentCertificates } from '@/lib/certificates';
 
 type NavigationTab = "profile" | "dashboard" | "upload" | "activities" | "timeline" | "qr" | "share" | "settings" | "faq";
 type CertificateStatus = "pending" | "approved" | "rejected";
@@ -104,50 +105,31 @@ function StudentDashboardContent() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCertificates, setSelectedCertificates] = useState<string[]>([]);
 
-  // Mock data for certificates
-  const [certificates, setCertificates] = useState<Certificate[]>([
-    {
-      id: "1",
-      name: "JavaScript Certification",
-      type: "certificate",
-      event: "Web Development Workshop",
-      status: "approved",
-      date: "2025-09-01",
-    },
-    {
-      id: "2", 
-      name: "React Fundamentals Certificate",
-      type: "certificate",
-      event: "Frontend Bootcamp",
-      status: "pending",
-      date: "2025-09-10",
-    },
-    {
-      id: "3",
-      name: "Project Management Certificate",
-      type: "workshop",
-      event: "Leadership Training",
-      status: "approved",
-      date: "2025-08-28",
-    },
-    {
-      id: "4",
-      name: "Node.js Certificate",
-      type: "certificate",
-      event: "Backend Development",
-      status: "approved",
-      date: "2025-08-25",
-    },
-    {
-      id: "5",
-      name: "Internship Completion Certificate",
-      type: "internship",
-      event: "Summer Internship 2025",
-      status: "approved",
-      date: "2025-08-20",
-    }
-  ]);
+  // Certificates fetched from database
+  const [certificates, setCertificates] = useState<Certificate[]>([]);
 
+  useEffect(() => {
+    const fetchCerts = async () => {
+      if (!user) return;
+      try {
+        const rows = await listStudentCertificates(user.id);
+        const mapped: Certificate[] = rows.map(r => ({
+          id: r.id,
+          name: r.issued_name,
+          type: 'certificate',
+          event: r.class_code,
+          status: r.status as CertificateStatus,
+          date: r.uploaded_at,
+        }));
+        setCertificates(mapped);
+      } catch (err) {
+        console.error('Failed to fetch certificates', err);
+      }
+    };
+    fetchCerts();
+  }, [user]);
+
+  // ------------------- UI & Handlers ------------------
   const handleSignOut = async () => {
     await signOut();
   };
@@ -466,13 +448,13 @@ function StudentDashboardContent() {
                 <CardContent>
                   <div className="space-y-4">
                     {/* Quick Stats Row */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                    <div className="grid grid-cols-3 md:grid-cols-3 gap-4 mb-6">
                       <div className="bg-slate-50 p-3 rounded-lg border border-gray-200">
                         <div className="flex items-center gap-2">
                           <Award className="h-4 w-4 text-blue-600" />
                           <div>
                             <p className="text-xs font-medium text-gray-700">Pending</p>
-                            <p className="text-lg font-semibold text-gray-900">3</p>
+                            <p className="text-lg font-semibold text-gray-900">{certificates.filter(c => c.status === 'pending').length}</p>
                           </div>
                         </div>
                       </div>
@@ -481,16 +463,7 @@ function StudentDashboardContent() {
                           <CheckCircle className="h-4 w-4 text-blue-600" />
                           <div>
                             <p className="text-xs font-medium text-gray-700">Approved</p>
-                            <p className="text-lg font-semibold text-gray-900">12</p>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="bg-slate-50 p-3 rounded-lg border border-gray-200">
-                        <div className="flex items-center gap-2">
-                          <Briefcase className="h-4 w-4 text-blue-600" />
-                          <div>
-                            <p className="text-xs font-medium text-gray-700">This Month</p>
-                            <p className="text-lg font-semibold text-gray-900">5</p>
+                            <p className="text-lg font-semibold text-gray-900">{certificates.filter(c => c.status === 'approved').length}</p>
                           </div>
                         </div>
                       </div>
@@ -499,7 +472,7 @@ function StudentDashboardContent() {
                           <TrendingUp className="h-4 w-4 text-blue-600" />
                           <div>
                             <p className="text-xs font-medium text-gray-700">Total</p>
-                            <p className="text-lg font-semibold text-gray-900">28</p>
+                            <p className="text-lg font-semibold text-gray-900">{certificates.length}</p>
                           </div>
                         </div>
                       </div>
@@ -509,68 +482,11 @@ function StudentDashboardContent() {
                     <div className="space-y-3">
                       <h4 className="font-medium text-gray-900 mb-3">Latest Submissions</h4>
                       
-                      {/* Activity Item 1 */}
-                      <div className="flex items-start gap-4 p-4 bg-white border border-gray-200 rounded-lg hover:shadow-sm transition-shadow">
-                        <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                          <Award className="h-5 w-5 text-blue-600" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between">
-                            <h5 className="font-medium text-gray-900 truncate">Machine Learning Certificate</h5>
-                            <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">Pending</Badge>
-                          </div>
-                          <p className="text-sm text-gray-600 mt-1">Coursera - Stanford University</p>
-                          <p className="text-xs text-gray-500 mt-2">Submitted 2 days ago</p>
-                        </div>
-                        <Button size="sm" variant="ghost" className="text-blue-600 hover:bg-blue-50">
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                      </div>
-
-                      {/* Activity Item 2 */}
-                      <div className="flex items-start gap-4 p-4 bg-white border border-gray-200 rounded-lg hover:shadow-sm transition-shadow">
-                        <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                          <CheckCircle className="h-5 w-5 text-green-600" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between">
-                            <h5 className="font-medium text-gray-900 truncate">Web Development Internship</h5>
-                            <Badge className="bg-green-100 text-green-800 border-green-200">Approved</Badge>
-                          </div>
-                          <p className="text-sm text-gray-600 mt-1">TechCorp Inc. - 3 months</p>
-                          <p className="text-xs text-gray-500 mt-2">Approved 1 week ago</p>
-                        </div>
-                        <Button size="sm" variant="ghost" className="text-green-600 hover:bg-green-50">
-                          <Download className="h-4 w-4" />
-                        </Button>
-                      </div>
-
-                      {/* Activity Item 3 */}
-                      <div className="flex items-start gap-4 p-4 bg-white border border-gray-200 rounded-lg hover:shadow-sm transition-shadow">
-                        <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-                          <Briefcase className="h-5 w-5 text-purple-600" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between">
-                            <h5 className="font-medium text-gray-900 truncate">React Portfolio Project</h5>
-                            <Badge className="bg-blue-100 text-blue-800 border-blue-200">Under Review</Badge>
-                          </div>
-                          <p className="text-sm text-gray-600 mt-1">Personal Project - Frontend Development</p>
-                          <p className="text-xs text-gray-500 mt-2">Submitted 5 days ago</p>
-                        </div>
-                        <Button size="sm" variant="ghost" className="text-purple-600 hover:bg-purple-50">
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                      </div>
-
                       {/* Quick Action to Add New Activity */}
                       <AddActivityModal>
-                        <div className="mt-4 p-4 border-2 border-dashed border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors cursor-pointer">
-                          <div className="text-center">
-                            <Plus className="h-6 w-6 text-gray-400 mx-auto mb-2" />
-                            <p className="text-sm text-gray-600">Add New Activity</p>
-                            <p className="text-xs text-gray-500">Click to log a new certificate, project, or internship</p>
-                          </div>
+                        <div className="mt-4 p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors cursor-pointer text-center">
+                          <Plus className="h-6 w-6 text-gray-400 mx-auto mb-2" />
+                          <p className="text-sm text-gray-600">Add New Activity</p>
                         </div>
                       </AddActivityModal>
                     </div>

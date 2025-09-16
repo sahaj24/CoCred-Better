@@ -8,6 +8,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
 import { CheckCircle2, AlertCircle, Upload as UploadIcon } from 'lucide-react';
 import { uploadFile } from '@/lib/file-upload';
+import { addCertificate } from '@/lib/certificates';
+import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth-context';
 
 interface FileWithPreview extends File {
@@ -78,6 +80,18 @@ export function UploadPage() {
     }
 
     setIsUploading(true);
+
+    // Fetch student row once
+    const { data: studentRow, error: studentErr } = await supabase
+      .from('students')
+      .select('id, class_code')
+      .eq('user_id', user.id)
+      .maybeSingle();
+    if (studentErr || !studentRow) {
+      alert('Student profile not found. Please make sure you have joined your class.');
+      setIsUploading(false);
+      return;
+    }
     setUploadResults(null);
 
     let successful = 0;
@@ -98,6 +112,15 @@ export function UploadPage() {
 
         if (result.success && result.data) {
           updateFileStatus(file.id, 'success', undefined, result.data.path);
+
+          // Create DB certificate row
+          await addCertificate({
+            studentId: studentRow.id,
+            classCode: studentRow.class_code,
+            filePath: result.data.path,
+            publicUrl: result.data.publicUrl,
+            issuedName: file.name,
+          });
           successful++;
         } else {
           throw new Error(result.error || 'Upload failed');

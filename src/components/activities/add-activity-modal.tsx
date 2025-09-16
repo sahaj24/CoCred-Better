@@ -1,6 +1,10 @@
 "use client";
 
 import React, { useState } from 'react';
+import { useAuth } from '@/lib/auth-context';
+import { supabase } from '@/lib/supabase';
+import { addCertificate } from '@/lib/certificates';
+import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,6 +32,7 @@ type ActivityCategory = "Academic" | "Technical" | "Leadership" | "Sports" | "Cu
 
 export function AddActivityModal({ children }: AddActivityModalProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const { toast } = useToast();
   const [activityType, setActivityType] = useState<ActivityType>("certificate");
   const [formData, setFormData] = useState({
     title: '',
@@ -51,10 +56,41 @@ export function AddActivityModal({ children }: AddActivityModalProps) {
 
   const categories = ['Academic', 'Technical', 'Leadership', 'Sports', 'Cultural', 'Social'];
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const { user } = useAuth();
+ const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Handle form submission
-    console.log('Activity submitted:', { ...formData, type: activityType });
+    if (!user) return;
+    // insert row into certificates with pending status (no file path)
+    try {
+      const { data: studentRow, error: sErr } = await supabase
+        .from('students')
+        .select('id, class_code')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if (sErr || !studentRow) {
+        throw new Error('Please join a class before adding activities.');
+      }
+
+      await addCertificate({
+        studentId: studentRow.id,
+        classCode: studentRow.class_code,
+        filePath: '',
+        publicUrl: '',
+        issuedName: formData.title,
+      });
+      toast({
+        title: 'Activity logged',
+        description: 'Waiting for faculty approval',
+      });
+    } catch(err){
+      console.error('Failed to log activity certificate', err);
+      toast({
+        variant: 'destructive',
+        title: 'Failed to add activity',
+        description: (err as Error).message,
+      });
+      return;
+    }
     setIsOpen(false);
     // Reset form
     setFormData({
