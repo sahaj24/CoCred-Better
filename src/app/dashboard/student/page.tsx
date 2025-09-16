@@ -53,6 +53,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { UploadPage } from '@/components/upload/upload-page';
+import { DownloadPage } from '@/components/download/download-page';
 
 type NavigationTab = "profile" | "dashboard" | "upload" | "download" | "qr" | "share" | "settings" | "help";
 type CertificateStatus = "pending" | "approved" | "rejected";
@@ -557,50 +559,12 @@ function StudentDashboardContent() {
 
           {/* Upload Tab Content */}
           {activeTab === "upload" && (
-            <div className="space-y-6">
-              <Card className="bg-white shadow-sm hover:shadow-md transition-shadow rounded-xl border border-gray-100">
-                <CardHeader>
-                  <CardTitle className="text-xl text-gray-900">Upload Documents</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center py-8">
-                    <div className="w-16 h-16 mx-auto mb-4 bg-green-100 rounded-full flex items-center justify-center">
-                      <Upload className="h-8 w-8 text-green-600" />
-                    </div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Upload Your Certificates</h3>
-                    <p className="text-gray-500 mb-6">Upload certificates, internships, and project documents</p>
-                    <Button className="bg-[#2161FF] hover:bg-blue-700">
-                      <Upload className="h-4 w-4 mr-2" />
-                      Start Upload
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+            <UploadPage />
           )}
 
           {/* Download Tab Content */}
           {activeTab === "download" && (
-            <div className="space-y-6">
-              <Card className="bg-white shadow-sm hover:shadow-md transition-shadow rounded-xl border border-gray-100">
-                <CardHeader>
-                  <CardTitle className="text-xl text-gray-900">Download Center</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center py-8">
-                    <div className="w-16 h-16 mx-auto mb-4 bg-blue-100 rounded-full flex items-center justify-center">
-                      <Download className="h-8 w-8 text-blue-600" />
-                    </div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Download Your Documents</h3>
-                    <p className="text-gray-500 mb-6">Access and download all your certificates and documents</p>
-                    <Button className="bg-[#2161FF] hover:bg-blue-700">
-                      <Download className="h-4 w-4 mr-2" />
-                      Browse Downloads
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+            <DownloadPage />
           )}
 
           {/* Other tab content */}
