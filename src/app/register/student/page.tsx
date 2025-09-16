@@ -4,6 +4,7 @@
 import { useContext } from "react";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { StudentRegisterForm } from "@/components/auth/student-register-form";
+import { AuthRedirectWrapper } from "@/components/auth/auth-redirect-wrapper";
 import { GraduationCap } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -13,7 +14,8 @@ export default function StudentRegisterPage() {
   const { translations } = useContext(LanguageContext);
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
+    <AuthRedirectWrapper>
+      <main className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
       <div className="absolute top-4 left-4">
         <Button variant="outline" asChild>
           <Link href="/">
@@ -32,5 +34,6 @@ export default function StudentRegisterPage() {
         <StudentRegisterForm />
       </Card>
     </main>
+    </AuthRedirectWrapper>
   );
 }

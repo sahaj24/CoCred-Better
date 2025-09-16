@@ -30,6 +30,8 @@ import { useState, useContext } from "react";
 import { LanguageContext } from "@/lib/language-context";
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import { useAuth } from "@/lib/auth-context";
+import { useSessionPersistence } from "@/lib/use-session-persistence";
+import { useCrossTabAuth } from "@/lib/use-cross-tab-auth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -77,6 +79,13 @@ export default function StudentDashboard() {
 function StudentDashboardContent() {
   const { user, signOut } = useAuth();
   const { translations } = useContext(LanguageContext);
+  
+  // Use session persistence hook
+  useSessionPersistence();
+  
+  // Use cross-tab auth synchronization
+  useCrossTabAuth();
+  
   const [activeTab, setActiveTab] = useState<NavigationTab>("dashboard");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCertificates, setSelectedCertificates] = useState<string[]>([]);

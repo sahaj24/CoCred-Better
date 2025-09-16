@@ -7,7 +7,33 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: true
+    detectSessionInUrl: true,
+    flowType: 'pkce',
+    storage: typeof window !== 'undefined' ? {
+      getItem: (key: string) => {
+        try {
+          return window.localStorage.getItem(key);
+        } catch {
+          return null;
+        }
+      },
+      setItem: (key: string, value: string) => {
+        try {
+          window.localStorage.setItem(key, value);
+        } catch {
+          // Silently fail
+        }
+      },
+      removeItem: (key: string) => {
+        try {
+          window.localStorage.removeItem(key);
+        } catch {
+          // Silently fail
+        }
+      },
+    } : undefined,
+    storageKey: 'supabase.auth.token',
+    debug: process.env.NODE_ENV === 'development'
   }
 })
 
@@ -59,6 +85,15 @@ export const signInWithGoogle = async (userType: 'student' | 'teacher' | 'author
   const baseUrl = getBaseUrl()
   // Go back to direct dashboard redirect for simplicity
   const redirectUrl = `${baseUrl}/dashboard/${userType}`
+  
+  // Save user type for later use
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.setItem('cocred_pending_user_type', userType);
+    } catch (error) {
+      console.warn('Could not save pending user type:', error);
+    }
+  }
   
   // Debug logging
   console.log('=== GOOGLE OAUTH DEBUG ===');
