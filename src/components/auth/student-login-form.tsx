@@ -22,6 +22,7 @@ import { useToast } from "@/hooks/use-toast";
 import { CardContent, CardFooter } from "../ui/card";
 import { Mail, Lock } from "lucide-react";
 import { supabase, signInWithGoogle } from "@/lib/supabase";
+import { joinClassByCode } from "@/lib/classroom";
 import { LanguageContext } from "@/lib/language-context";
 
 const formSchema = z.object({
@@ -30,6 +31,9 @@ const formSchema = z.object({
   }),
   password: z.string().min(6, {
     message: "Password must be at least 6 characters.",
+  }),
+  classCode: z.string().length(6, {
+    message: "Enter 6-character class code",
   }),
 });
 
@@ -43,6 +47,7 @@ export function StudentLoginForm() {
     defaultValues: {
       email: "",
       password: "",
+      classCode: "",
     },
   });
 
@@ -63,6 +68,21 @@ export function StudentLoginForm() {
       }
 
       if (data.user) {
+        try {
+          await joinClassByCode({
+            userId: data.user.id,
+            fullName: data.user.user_metadata?.full_name || values.email.split("@")[0],
+            classCode: values.classCode,
+          });
+        } catch (err) {
+          console.error('Failed to join class', err);
+          toast({
+            variant: "destructive",
+            title: "Could not join class",
+            description: (err as Error)?.message || 'Invalid class code',
+          });
+          return;
+        }
         toast({
           title: translations.loginForm.loginSuccessTitle,
           description: translations.loginForm.loginSuccessDescription,
@@ -117,10 +137,23 @@ export function StudentLoginForm() {
           />
           <FormField
             control={form.control}
+            name="classCode"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-sm font-semibold text-gray-700">Class Code</FormLabel>
+                <FormControl>
+                  <Input placeholder="ABC123" {...field} className="h-12" maxLength={6} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
             name="password"
             render={({ field }) => (
               <FormItem>
-                 <div className="flex justify-between items-center">
+                <div className="flex justify-between items-center">
                   <FormLabel className="text-sm font-semibold text-gray-700">{translations.loginForm.password}</FormLabel>
                   <Button variant="link" asChild className="p-0 h-auto text-xs text-blue-600 hover:text-blue-800">
                     <Link href="/forgot-password/student">{translations.loginForm.forgotPassword}</Link>
@@ -145,7 +178,7 @@ export function StudentLoginForm() {
         <CardFooter className="flex-col gap-4 pb-8">
           <Button 
             type="submit" 
-            className="w-full h-12 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200"
+            className="w-full h-10 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md transition-all duration-200"
           >
             {translations.loginForm.login}
           </Button>

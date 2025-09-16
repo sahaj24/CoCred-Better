@@ -368,7 +368,7 @@ function StudentDashboardContent() {
               {/* Two-Card Upload Grid */}
               <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                 {/* Documents Upload Card */}
-                <Card className="bg-white shadow-sm hover:shadow-md transition-shadow rounded-xl border border-gray-100 cursor-pointer">
+                <Card className="bg-white border border-gray-200 hover:border-blue-300 transition-colors rounded-lg cursor-pointer">
                   <CardContent className="p-6">
                     <div className="text-center">
                       <h3 className="text-lg font-semibold text-gray-900 mb-3">Upload Documents</h3>
@@ -413,7 +413,7 @@ function StudentDashboardContent() {
                 </Card>
 
                 {/* Downloads & Management Card */}
-                <Card className="bg-white shadow-sm hover:shadow-md transition-shadow rounded-xl border border-gray-100 cursor-pointer">
+                <Card className="bg-white border border-gray-200 hover:border-blue-300 transition-colors rounded-lg cursor-pointer">
                   <CardContent className="p-6">
                     <div className="text-center">
                       <h3 className="text-lg font-semibold text-gray-900 mb-3">Share & Manage</h3>
@@ -428,8 +428,8 @@ function StudentDashboardContent() {
                           <span className="text-xs text-gray-600">Generate QR</span>
                         </div>
                         <div className="flex flex-col items-center space-y-1">
-                          <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
-                            <Share2 className="h-5 w-5 text-emerald-600" />
+                          <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                            <Share2 className="h-5 w-5 text-blue-600" />
                           </div>
                           <span className="text-xs text-gray-600">Share</span>
                         </div>
@@ -467,39 +467,39 @@ function StudentDashboardContent() {
                   <div className="space-y-4">
                     {/* Quick Stats Row */}
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                      <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-xl border border-blue-200">
-                        <div className="flex items-center gap-3">
-                          <Award className="h-5 w-5 text-blue-600" />
+                      <div className="bg-slate-50 p-3 rounded-lg border border-gray-200">
+                        <div className="flex items-center gap-2">
+                          <Award className="h-4 w-4 text-blue-600" />
                           <div>
-                            <p className="text-sm font-medium text-blue-700">Pending</p>
-                            <p className="text-2xl font-bold text-blue-800">3</p>
+                            <p className="text-xs font-medium text-gray-700">Pending</p>
+                            <p className="text-lg font-semibold text-gray-900">3</p>
                           </div>
                         </div>
                       </div>
-                      <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-xl border border-green-200">
-                        <div className="flex items-center gap-3">
-                          <CheckCircle className="h-5 w-5 text-green-600" />
+                      <div className="bg-slate-50 p-3 rounded-lg border border-gray-200">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle className="h-4 w-4 text-blue-600" />
                           <div>
-                            <p className="text-sm font-medium text-green-700">Approved</p>
-                            <p className="text-2xl font-bold text-green-800">12</p>
+                            <p className="text-xs font-medium text-gray-700">Approved</p>
+                            <p className="text-lg font-semibold text-gray-900">12</p>
                           </div>
                         </div>
                       </div>
-                      <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-xl border border-purple-200">
-                        <div className="flex items-center gap-3">
-                          <Briefcase className="h-5 w-5 text-purple-600" />
+                      <div className="bg-slate-50 p-3 rounded-lg border border-gray-200">
+                        <div className="flex items-center gap-2">
+                          <Briefcase className="h-4 w-4 text-blue-600" />
                           <div>
-                            <p className="text-sm font-medium text-purple-700">This Month</p>
-                            <p className="text-2xl font-bold text-purple-800">5</p>
+                            <p className="text-xs font-medium text-gray-700">This Month</p>
+                            <p className="text-lg font-semibold text-gray-900">5</p>
                           </div>
                         </div>
                       </div>
-                      <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-4 rounded-xl border border-orange-200">
-                        <div className="flex items-center gap-3">
-                          <TrendingUp className="h-5 w-5 text-orange-600" />
+                      <div className="bg-slate-50 p-3 rounded-lg border border-gray-200">
+                        <div className="flex items-center gap-2">
+                          <TrendingUp className="h-4 w-4 text-blue-600" />
                           <div>
-                            <p className="text-sm font-medium text-orange-700">Total</p>
-                            <p className="text-2xl font-bold text-orange-800">28</p>
+                            <p className="text-xs font-medium text-gray-700">Total</p>
+                            <p className="text-lg font-semibold text-gray-900">28</p>
                           </div>
                         </div>
                       </div>

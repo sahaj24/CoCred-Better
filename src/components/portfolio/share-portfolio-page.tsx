@@ -244,7 +244,7 @@ export function SharePortfolioPage() {
     <div className="py-4">
       <div className="flex items-center gap-2 mb-1">
         <h4 className="font-semibold">{activity.name}</h4>
-        <Badge variant="outline" className="bg-emerald-100 text-emerald-800 border-emerald-300">
+        <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-300">
           <CheckCircle className="mr-1 h-3 w-3" />
           Verified
         </Badge>

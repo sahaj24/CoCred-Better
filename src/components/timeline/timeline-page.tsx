@@ -73,7 +73,7 @@ export function TimelinePage() {
               {allActivities.map((activity) => (
                 <div key={activity.id} className="relative">
                   <div className={`absolute -left-[34px] top-1 h-4 w-4 rounded-full border-2 border-background ${
-                    activity.status === 'Approved' ? 'bg-emerald-500' : 
+                    activity.status === 'Approved' ? 'bg-blue-500' : 
                     activity.status === 'Pending' ? 'bg-amber-500' : 'bg-red-500'
                   }`}></div>
                   <p className="text-xs text-muted-foreground">

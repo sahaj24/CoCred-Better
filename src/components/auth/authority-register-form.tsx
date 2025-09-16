@@ -22,6 +22,8 @@ import { useToast } from "@/hooks/use-toast";
 import { CardContent, CardFooter } from "../ui/card";
 import { User, Mail, Building, Lock } from "lucide-react";
 import { LanguageContext } from "@/lib/language-context";
+import { supabase } from "@/lib/supabase";
+import { createOrGetFacultyClassCode } from "@/lib/classroom";
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
@@ -53,13 +55,40 @@ export function AuthorityRegisterForm() {
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log("Authority registration submitted:", values);
-    toast({
-      title: translations.registerForm.regSuccessTitle,
-      description: translations.registerForm.regSuccessDescription,
-    });
-    router.push("/login/authority");
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+        try {
+      const { data, error } = await supabase.auth.signUp({
+        email: values.email,
+        password: values.password,
+        options: {
+          data: {
+            full_name: values.name,
+            college: values.college,
+            user_type: 'authority',
+            authority_type: 'faculty'
+          }
+        }
+      });
+      if (error) {
+        throw error;
+      }
+      if (!data.user) {
+        throw new Error('No user returned');
+      }
+      /* Faculty row will be created automatically on first login */
+      toast({
+        title: translations.registerForm.regSuccessTitle,
+        description: translations.registerForm.regSuccessDescription,
+      });
+      router.push("/login/authority?role=faculty");
+    } catch (err) {
+      console.error('Registration failed', err);
+      toast({
+        variant: "destructive",
+        title: translations.registerForm.regFailedTitle,
+        description: (err as Error)?.message || translations.registerForm.regFailedDescription,
+      });
+    }
   }
 
   return (

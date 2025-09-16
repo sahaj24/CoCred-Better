@@ -5,7 +5,7 @@ import { useContext } from "react";
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { GraduationCap, BookUser, LogIn, UserPlus, Code } from 'lucide-react';
+import { GraduationCap, BookUser, Users, LogIn, UserPlus, Code } from 'lucide-react';
 import { LanguageContext } from '@/lib/language-context';
 import { AuthRedirectWrapper } from '@/components/auth/auth-redirect-wrapper';
 import { DEV_MODE } from '@/lib/dev-config';
@@ -41,7 +41,7 @@ export default function Home() {
 
   return (
     <AuthRedirectWrapper>
-      <main className="flex min-h-screen w-full flex-col items-center justify-center bg-gradient-to-br from-background to-blue-50 p-4 sm:p-6 md:p-8">
+      <main className="flex min-h-screen w-full flex-col items-center justify-center bg-gradient-to-br from-slate-50 to-gray-100 p-4 sm:p-6 md:p-8">
         <div className="absolute top-4 right-4">
           <LanguageSwitcher />
         </div>
@@ -58,53 +58,76 @@ export default function Home() {
           </div>
         )}
         
-        <div className="text-center mb-12">
-          <h1 className="font-headline text-4xl sm:text-5xl md:text-6xl font-bold text-primary">
+        <div className="text-center mb-10">
+          <h1 className="font-headline text-3xl sm:text-4xl md:text-5xl font-bold text-primary">
             {translations.home.title}
           </h1>
-          <p className="text-muted-foreground mt-2 text-base sm:text-lg">
+          <p className="text-muted-foreground mt-2 text-sm sm:text-base">
             {translations.home.subtitle}
           </p>
         </div>
-        <div className="grid md:grid-cols-2 gap-8 w-full max-w-4xl">
-          <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300">
-            <CardHeader className="items-center text-center">
-              <div className="p-3 bg-accent/20 rounded-full mb-2">
-                <BookUser className="h-10 w-10 text-accent" />
+        <div className="grid md:grid-cols-3 gap-6 w-full max-w-6xl">
+          <Card className="border border-gray-200 hover:border-blue-300 transition-colors duration-300">
+            <CardHeader className="items-center text-center pb-4">
+              <div className="p-2 bg-blue-50 rounded-lg mb-2">
+                <BookUser className="h-8 w-8 text-blue-600" />
               </div>
-              <CardTitle className="font-headline text-2xl">{translations.home.forAuthorities}</CardTitle>
-              <CardDescription>{translations.home.authoritiesDescription}</CardDescription>
+              <CardTitle className="font-headline text-xl">{translations.home.forAuthorities}</CardTitle>
+              <CardDescription className="text-sm">{translations.home.authoritiesDescription}</CardDescription>
             </CardHeader>
-            <CardContent className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button asChild className="w-full sm:w-auto">
+            <CardContent className="flex flex-col sm:flex-row gap-3 justify-center pt-0">
+              <Button asChild className="w-full sm:w-auto h-9 text-sm">
                 <Link href="/login/authority">
-                  <LogIn className="mr-2" /> {translations.home.login}
+                  <LogIn className="mr-2 h-4 w-4" /> {translations.home.login}
                 </Link>
               </Button>
-              <Button asChild variant="secondary" className="w-full sm:w-auto">
+              <Button asChild variant="secondary" className="w-full sm:w-auto h-9 text-sm">
                 <Link href="/register/authority">
-                  <UserPlus className="mr-2" /> {translations.home.createAccount}
+                  <UserPlus className="mr-2 h-4 w-4" /> {translations.home.createAccount}
                 </Link>
               </Button>
             </CardContent>
           </Card>
-          <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300">
-            <CardHeader className="items-center text-center">
-              <div className="p-3 bg-primary/20 rounded-full mb-2">
-                <GraduationCap className="h-10 w-10 text-primary" />
+          
+          <Card className="border border-gray-200 hover:border-blue-300 transition-colors duration-300">
+            <CardHeader className="items-center text-center pb-4">
+              <div className="p-2 bg-indigo-50 rounded-lg mb-2">
+                <Users className="h-8 w-8 text-indigo-600" />
               </div>
-              <CardTitle className="font-headline text-2xl">{translations.home.forStudents}</CardTitle>
-              <CardDescription>{translations.home.studentsDescription}</CardDescription>
+              <CardTitle className="font-headline text-xl">Faculty Portal</CardTitle>
+              <CardDescription className="text-sm">Access faculty dashboard and manage academic activities</CardDescription>
             </CardHeader>
-            <CardContent className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button asChild className="w-full sm:w-auto">
-                <Link href="/login/student">
-                  <LogIn className="mr-2" /> {translations.home.login}
+            <CardContent className="flex flex-col sm:flex-row gap-3 justify-center pt-0">
+              <Button asChild className="w-full sm:w-auto h-9 text-sm">
+                <Link href="/login/authority?role=faculty">
+                  <LogIn className="mr-2 h-4 w-4" /> {translations.home.login}
                 </Link>
               </Button>
-              <Button asChild variant="secondary" className="w-full sm:w-auto">
+              <Button asChild variant="secondary" className="w-full sm:w-auto h-9 text-sm">
+                <Link href="/register/authority?role=faculty">
+                  <UserPlus className="mr-2 h-4 w-4" /> {translations.home.createAccount}
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
+          
+          <Card className="border border-gray-200 hover:border-blue-300 transition-colors duration-300">
+            <CardHeader className="items-center text-center pb-4">
+              <div className="p-2 bg-blue-50 rounded-lg mb-2">
+                <GraduationCap className="h-8 w-8 text-blue-600" />
+              </div>
+              <CardTitle className="font-headline text-xl">{translations.home.forStudents}</CardTitle>
+              <CardDescription className="text-sm">{translations.home.studentsDescription}</CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col sm:flex-row gap-3 justify-center pt-0">
+              <Button asChild className="w-full sm:w-auto h-9 text-sm">
+                <Link href="/login/student">
+                  <LogIn className="mr-2 h-4 w-4" /> {translations.home.login}
+                </Link>
+              </Button>
+              <Button asChild variant="secondary" className="w-full sm:w-auto h-9 text-sm">
                 <Link href="/register/student">
-                  <UserPlus className="mr-2" /> {translations.home.createAccount}
+                  <UserPlus className="mr-2 h-4 w-4" /> {translations.home.createAccount}
                 </Link>
               </Button>
             </CardContent>

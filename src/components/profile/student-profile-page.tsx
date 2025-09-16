@@ -123,51 +123,51 @@ const StudentProfilePage: React.FC = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6 p-6">
+    <div className="max-w-5xl mx-auto space-y-4 p-4">
       {/* Header Card with Avatar and Basic Info */}
-      <Card className="bg-white shadow-lg border-0 overflow-hidden">
-        <div className="bg-gradient-to-r from-blue-600 to-purple-600 h-32"></div>
-        <CardContent className="p-8 -mt-16 relative">
-          <div className="flex flex-col lg:flex-row items-center lg:items-end gap-6">
+      <Card className="bg-white border border-gray-200">
+        <div className="bg-gradient-to-r from-slate-50 to-gray-100 h-20"></div>
+        <CardContent className="p-6 -mt-10 relative">
+          <div className="flex flex-col lg:flex-row items-center lg:items-end gap-4">
             {/* Avatar Section */}
             <div className="relative z-10">
-              <Avatar className="h-32 w-32 border-4 border-white shadow-xl">
+              <Avatar className="h-20 w-20 border-2 border-white">
                 <AvatarImage src={profile.profileImage} alt={profile.name} />
-                <AvatarFallback className="text-3xl bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+                <AvatarFallback className="text-lg bg-blue-500 text-white">
                   {profile.name.split(' ').map(n => n[0]).join('')}
                 </AvatarFallback>
               </Avatar>
               {isEditing && (
                 <Button
                   size="sm"
-                  className="absolute -bottom-1 -right-1 h-10 w-10 rounded-full p-0 bg-blue-600 hover:bg-blue-700 shadow-lg"
+                  className="absolute -bottom-1 -right-1 h-8 w-8 rounded-full p-0 bg-blue-600 hover:bg-blue-700"
                 >
-                  <Camera className="h-4 w-4" />
+                  <Camera className="h-3 w-3" />
                 </Button>
               )}
             </div>
 
             {/* Basic Info */}
-            <div className="flex-1 text-center lg:text-left space-y-2">
+            <div className="flex-1 text-center lg:text-left space-y-1">
               {isEditing ? (
-                <div className="space-y-3 max-w-md">
+                <div className="space-y-2 max-w-md">
                   <Input
                     value={editedProfile.name}
                     onChange={(e) => setEditedProfile({...editedProfile, name: e.target.value})}
-                    className="text-2xl font-bold text-center lg:text-left bg-white border-2"
+                    className="text-xl font-semibold text-center lg:text-left bg-white border"
                     placeholder="Full Name"
                   />
                   <Input
                     value={editedProfile.email}
                     onChange={(e) => setEditedProfile({...editedProfile, email: e.target.value})}
-                    className="text-center lg:text-left bg-white border-2"
+                    className="text-center lg:text-left bg-white border"
                     placeholder="Email"
                   />
                 </div>
               ) : (
                 <div>
-                  <h1 className="text-3xl font-bold text-gray-900 mb-1">{profile.name}</h1>
-                  <p className="text-lg text-gray-600 mb-3">{profile.email}</p>
+                  <h1 className="text-2xl font-semibold text-gray-900 mb-1">{profile.name}</h1>
+                  <p className="text-base text-gray-600 mb-2">{profile.email}</p>
                   <div className="flex flex-wrap justify-center lg:justify-start gap-2">
                     <Badge className="bg-blue-100 text-blue-800 border-blue-200 px-3 py-1">
                       {profile.course}
@@ -206,26 +206,26 @@ const StudentProfilePage: React.FC = () => {
           </div>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
-            <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200 hover:shadow-md transition-shadow">
-              <Award className="h-6 w-6 text-blue-600 mx-auto mb-2" />
-              <div className="text-2xl font-bold text-blue-700">{profile.stats.certificates}</div>
-              <div className="text-sm text-blue-600 font-medium">Certificates</div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-6">
+            <div className="text-center p-3 bg-slate-50 rounded-lg border border-gray-200">
+              <Award className="h-5 w-5 text-blue-600 mx-auto mb-1" />
+              <div className="text-xl font-semibold text-gray-900">{profile.stats.certificates}</div>
+              <div className="text-xs text-gray-600">Certificates</div>
             </div>
-            <div className="text-center p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-xl border border-green-200 hover:shadow-md transition-shadow">
-              <Briefcase className="h-6 w-6 text-green-600 mx-auto mb-2" />
-              <div className="text-2xl font-bold text-green-700">{profile.stats.internships}</div>
-              <div className="text-sm text-green-600 font-medium">Internships</div>
+            <div className="text-center p-3 bg-slate-50 rounded-lg border border-gray-200">
+              <Briefcase className="h-5 w-5 text-blue-600 mx-auto mb-1" />
+              <div className="text-xl font-semibold text-gray-900">{profile.stats.internships}</div>
+              <div className="text-xs text-gray-600">Internships</div>
             </div>
-            <div className="text-center p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border border-purple-200 hover:shadow-md transition-shadow">
-              <Target className="h-6 w-6 text-purple-600 mx-auto mb-2" />
-              <div className="text-2xl font-bold text-purple-700">{profile.stats.projects}</div>
-              <div className="text-sm text-purple-600 font-medium">Projects</div>
+            <div className="text-center p-3 bg-slate-50 rounded-lg border border-gray-200">
+              <Target className="h-5 w-5 text-blue-600 mx-auto mb-1" />
+              <div className="text-xl font-semibold text-gray-900">{profile.stats.projects}</div>
+              <div className="text-xs text-gray-600">Projects</div>
             </div>
-            <div className="text-center p-4 bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl border border-orange-200 hover:shadow-md transition-shadow">
-              <Users className="h-6 w-6 text-orange-600 mx-auto mb-2" />
-              <div className="text-2xl font-bold text-orange-700">{profile.stats.activities}</div>
-              <div className="text-sm text-orange-600 font-medium">Activities</div>
+            <div className="text-center p-3 bg-slate-50 rounded-lg border border-gray-200">
+              <Users className="h-5 w-5 text-blue-600 mx-auto mb-1" />
+              <div className="text-xl font-semibold text-gray-900">{profile.stats.activities}</div>
+              <div className="text-xs text-gray-600">Activities</div>
             </div>
           </div>
         </CardContent>

@@ -51,7 +51,7 @@ export function AuthRedirectWrapper({ children }: AuthRedirectWrapperProps) {
   // Show loading state while checking auth or redirecting
   if (loading || isRedirecting || !shouldRender) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-background to-blue-50">
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-50 to-gray-100">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-4"></div>
           <div className="text-lg text-gray-600">

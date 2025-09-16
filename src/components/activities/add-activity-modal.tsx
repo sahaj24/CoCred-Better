@@ -46,7 +46,7 @@ export function AddActivityModal({ children }: AddActivityModalProps) {
     { value: 'project', label: 'Project', icon: BookOpen, color: 'purple' },
     { value: 'workshop', label: 'Workshop', icon: Users, color: 'orange' },
     { value: 'competition', label: 'Competition', icon: Award, color: 'red' },
-    { value: 'volunteer', label: 'Volunteer Work', icon: Users, color: 'teal' }
+    { value: 'volunteer', label: 'Volunteer Work', icon: Users, color: 'blue' }
   ];
 
   const categories = ['Academic', 'Technical', 'Leadership', 'Sports', 'Cultural', 'Social'];

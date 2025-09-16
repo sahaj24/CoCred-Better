@@ -174,7 +174,7 @@ export function StudentRegisterForm() {
         <CardFooter className="flex-col gap-4 pb-8">
           <Button 
             type="submit" 
-            className="w-full h-12 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200"
+            className="w-full h-10 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md transition-all duration-200"
           >
             {translations.registerForm.createAccount}
           </Button>
