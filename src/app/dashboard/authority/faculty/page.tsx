@@ -673,7 +673,7 @@ export default function FacultyPortal() {
           {/* Logo */}
           <div className="flex items-center space-x-2">
             <img 
-              src="/logo-blue.svg" 
+              src="/logo-w.svg" 
               alt="CoCred Logo" 
               className="h-10 w-auto"
             />

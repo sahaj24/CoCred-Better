@@ -38,20 +38,8 @@ export function QRGeneratorPage() {
 
   // Generate different URLs based on content type
   const generateQRData = () => {
-    const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
-    
-    switch (contentType) {
-      case 'portfolio':
-        return `${baseUrl}/portfolio/share/${user?.id}`;
-      case 'profile':
-        return `${baseUrl}/profile/${user?.id}`;
-      case 'contact':
-        return `BEGIN:VCARD\nVERSION:3.0\nFN:${user?.email?.split('@')[0] || 'Student'}\nEMAIL:${user?.email || ''}\nEND:VCARD`;
-      case 'custom':
-        return customMessage || `${baseUrl}/portfolio/share/${user?.id}`;
-      default:
-        return `${baseUrl}/portfolio/share/${user?.id}`;
-    }
+    // Hardcoded QR data URL
+    return "https://sewsbkwlkdegjuaiccth.supabase.co/storage/v1/object/public/student-uploads/00a6eaa6-a41f-43f3-a57c-c4068d5bda9c/1758099141740_LOC.pdf";
   };
 
   const qrData = generateQRData();
@@ -180,24 +168,24 @@ export function QRGeneratorPage() {
                   }}
                 >
                   <div
-                    className="rounded-lg flex items-center justify-center font-mono text-xs"
+                    className="rounded-lg flex items-center justify-center"
                     style={{
                       width: `${qrSize}px`,
                       height: `${qrSize}px`,
                       backgroundColor: backgroundColor,
-                      color: foregroundColor,
                       border: `2px solid ${foregroundColor}20`
                     }}
                   >
-                    <div className="text-center space-y-2">
-                      <QrCode size={qrSize / 4} style={{ color: foregroundColor }} />
-                      <div style={{ color: foregroundColor }}>
-                        QR Code Preview
-                      </div>
-                      <div className="text-xs opacity-70" style={{ color: foregroundColor }}>
-                        {qrSize}×{qrSize}px
-                      </div>
-                    </div>
+                    <img
+                      src="https://api.qrserver.com/v1/create-qr-code/?color=000000&bgcolor=FFFFFF&data=https%3A%2F%2Fsewsbkwlkdegjuaiccth.supabase.co%2Fstorage%2Fv1%2Fobject%2Fpublic%2Fstudent-uploads%2F00a6eaa6-a41f-43f3-a57c-c4068d5bda9c%2F1758099141740_LOC.pdf&qzone=1&margin=0&size=400x400&ecc=L"
+                      alt="QR Code"
+                      className="rounded-lg"
+                      style={{
+                        width: `${qrSize}px`,
+                        height: `${qrSize}px`,
+                        objectFit: 'contain'
+                      }}
+                    />
                   </div>
                 </div>
               </div>
