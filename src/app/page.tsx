@@ -1,14 +1,15 @@
 
 "use client";
 
-import { useContext } from "react";
+import { useContext, useState, Suspense } from "react";
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { GraduationCap, BookUser, Users, LogIn, UserPlus, Code } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { GraduationCap, BookUser, Users } from 'lucide-react';
 import { LanguageContext } from '@/lib/language-context';
 import { AuthRedirectWrapper } from '@/components/auth/auth-redirect-wrapper';
-import { DEV_MODE } from '@/lib/dev-config';
+import { StudentLoginForm } from '@/components/auth/student-login-form';
+import { AuthorityLoginForm } from '@/components/auth/authority-login-form';
 import {
   Select,
   SelectContent,
@@ -17,6 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+type UserRole = 'student' | 'faculty' | 'authority';
 
 function LanguageSwitcher() {
   const { language, setLanguage, translations } = useContext(LanguageContext);
@@ -35,9 +37,72 @@ function LanguageSwitcher() {
   );
 }
 
-
-export default function Home() {
+function HomePageContent() {
   const { translations } = useContext(LanguageContext);
+  const searchParams = useSearchParams();
+  const urlRole = searchParams.get('role') as UserRole | null;
+  const [activeRole, setActiveRole] = useState<UserRole>(urlRole || 'student');
+
+  const roles = [
+    {
+      id: 'authority' as const,
+      title: 'For Authorities',
+      description: 'Access your dashboard and manage students.',
+      icon: BookUser,
+      color: 'purple'
+    },
+    {
+      id: 'faculty' as const,
+      title: 'Faculty Portal',
+      description: 'Access faculty dashboard and manage academic activities',
+      icon: Users,
+      color: 'emerald'
+    },
+    {
+      id: 'student' as const,
+      title: 'For Students',
+      description: 'Log in to access your educational resources.',
+      icon: GraduationCap,
+      color: 'blue'
+    }
+  ];
+
+  const getColorClasses = (color: string, isActive: boolean) => {
+    const colors = {
+      blue: {
+        tab: isActive ? 'bg-blue-600 text-white shadow-lg' : 'text-blue-600 hover:bg-blue-50',
+        gradient: 'from-blue-50 to-indigo-50',
+        icon: 'text-blue-600'
+      },
+      emerald: {
+        tab: isActive ? 'bg-emerald-600 text-white shadow-lg' : 'text-emerald-600 hover:bg-emerald-50',
+        gradient: 'from-emerald-50 to-teal-50',
+        icon: 'text-emerald-600'
+      },
+      purple: {
+        tab: isActive ? 'bg-purple-600 text-white shadow-lg' : 'text-purple-600 hover:bg-purple-50',
+        gradient: 'from-purple-50 to-violet-50',
+        icon: 'text-purple-600'
+      }
+    };
+    return colors[color as keyof typeof colors];
+  };
+
+  const activeRoleData = roles.find(role => role.id === activeRole)!;
+  const activeColors = getColorClasses(activeRoleData.color, true);
+
+  const renderLoginForm = () => {
+    switch (activeRole) {
+      case 'student':
+        return <StudentLoginForm />;
+      case 'faculty':
+        return <AuthorityLoginForm isFaculty={true} />;
+      case 'authority':
+        return <AuthorityLoginForm isFaculty={false} />;
+      default:
+        return <StudentLoginForm />;
+    }
+  };
 
   return (
     <AuthRedirectWrapper>
@@ -46,94 +111,85 @@ export default function Home() {
           <LanguageSwitcher />
         </div>
         
-        {/* Dev Mode Banner */}
-        {DEV_MODE.BYPASS_AUTH && (
-          <div className="fixed top-4 left-4 z-50">
-            <Button asChild variant="outline" className="bg-yellow-100 border-yellow-300 text-yellow-800 hover:bg-yellow-200">
-              <Link href="/dev-nav">
-                <Code className="mr-2 h-4 w-4" />
-                Dev Navigation
-              </Link>
-            </Button>
-          </div>
-        )}
-        
         <div className="text-center mb-10">
           <h1 className="font-headline text-3xl sm:text-4xl md:text-5xl font-bold text-primary">
-            {translations.home.title}
+            CoCred
           </h1>
           <p className="text-muted-foreground mt-2 text-sm sm:text-base">
             {translations.home.subtitle}
           </p>
         </div>
-        <div className="grid md:grid-cols-3 gap-6 w-full max-w-6xl">
-          <Card className="border border-gray-200 hover:border-blue-300 transition-colors duration-300">
-            <CardHeader className="items-center text-center pb-4">
-              <div className="p-2 bg-blue-50 rounded-lg mb-2">
-                <BookUser className="h-8 w-8 text-blue-600" />
+
+        <div className="w-full max-w-lg">
+          <Card className="relative w-full border-0 bg-white shadow-xl shadow-gray-100/50">
+            {/* Role Tabs */}
+            <div className="flex rounded-t-lg bg-gray-50 p-1">
+              {roles.map((role) => {
+                const isActive = activeRole === role.id;
+                const colors = getColorClasses(role.color, isActive);
+                const IconComponent = role.icon;
+                
+                return (
+                  <button
+                    key={role.id}
+                    onClick={() => setActiveRole(role.id)}
+                    className={`flex-1 flex flex-col items-center gap-2 py-3 px-2 rounded-md transition-all duration-200 ${colors.tab}`}
+                  >
+                    <IconComponent className="h-5 w-5" />
+                    <span className="text-xs font-medium text-center leading-tight">
+                      {role.title}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <CardHeader className="items-center text-center pb-4 pt-8">
+              <div className={`mx-auto bg-gradient-to-br ${activeColors.gradient} p-4 rounded-2xl mb-4 shadow-sm`}>
+                <activeRoleData.icon className={`h-10 w-10 ${activeColors.icon}`} />
               </div>
-              <CardTitle className="font-headline text-xl">{translations.home.forAuthorities}</CardTitle>
-              <CardDescription className="text-sm">{translations.home.authoritiesDescription}</CardDescription>
+              <CardTitle className="font-headline text-2xl mb-2">{activeRoleData.title}</CardTitle>
             </CardHeader>
-            <CardContent className="flex flex-col sm:flex-row gap-3 justify-center pt-0">
-              <Button asChild className="w-full sm:w-auto h-9 text-sm">
-                <Link href="/login/authority">
-                  <LogIn className="mr-2 h-4 w-4" /> {translations.home.login}
-                </Link>
-              </Button>
-              <Button asChild variant="secondary" className="w-full sm:w-auto h-9 text-sm">
-                <Link href="/register/authority">
-                  <UserPlus className="mr-2 h-4 w-4" /> {translations.home.createAccount}
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
-          
-          <Card className="border border-gray-200 hover:border-blue-300 transition-colors duration-300">
-            <CardHeader className="items-center text-center pb-4">
-              <div className="p-2 bg-indigo-50 rounded-lg mb-2">
-                <Users className="h-8 w-8 text-indigo-600" />
+            
+            <CardContent className="pt-0 pb-8">
+              {renderLoginForm()}
+              
+              <div className="mt-6 text-center">
+                <p className="text-sm text-muted-foreground mb-3">
+                  Don't have an account?
+                </p>
+                {activeRole === 'student' ? (
+                  <Link 
+                    href="/register/student" 
+                    className="text-blue-600 hover:text-blue-700 font-medium text-sm hover:underline"
+                  >
+                    Create Student Account
+                  </Link>
+                ) : (
+                  <Link 
+                    href={activeRole === 'faculty' ? "/register/authority?role=faculty" : "/register/authority"} 
+                    className={`${activeRole === 'faculty' ? 'text-emerald-600 hover:text-emerald-700' : 'text-purple-600 hover:text-purple-700'} font-medium text-sm hover:underline`}
+                  >
+                    Create {activeRole === 'faculty' ? 'Faculty' : 'Authority'} Account
+                  </Link>
+                )}
               </div>
-              <CardTitle className="font-headline text-xl">Faculty Portal</CardTitle>
-              <CardDescription className="text-sm">Access faculty dashboard and manage academic activities</CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-col sm:flex-row gap-3 justify-center pt-0">
-              <Button asChild className="w-full sm:w-auto h-9 text-sm">
-                <Link href="/login/authority?role=faculty">
-                  <LogIn className="mr-2 h-4 w-4" /> {translations.home.login}
-                </Link>
-              </Button>
-              <Button asChild variant="secondary" className="w-full sm:w-auto h-9 text-sm">
-                <Link href="/register/authority?role=faculty">
-                  <UserPlus className="mr-2 h-4 w-4" /> {translations.home.createAccount}
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
-          
-          <Card className="border border-gray-200 hover:border-blue-300 transition-colors duration-300">
-            <CardHeader className="items-center text-center pb-4">
-              <div className="p-2 bg-blue-50 rounded-lg mb-2">
-                <GraduationCap className="h-8 w-8 text-blue-600" />
-              </div>
-              <CardTitle className="font-headline text-xl">{translations.home.forStudents}</CardTitle>
-              <CardDescription className="text-sm">{translations.home.studentsDescription}</CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-col sm:flex-row gap-3 justify-center pt-0">
-              <Button asChild className="w-full sm:w-auto h-9 text-sm">
-                <Link href="/login/student">
-                  <LogIn className="mr-2 h-4 w-4" /> {translations.home.login}
-                </Link>
-              </Button>
-              <Button asChild variant="secondary" className="w-full sm:w-auto h-9 text-sm">
-                <Link href="/register/student">
-                  <UserPlus className="mr-2 h-4 w-4" /> {translations.home.createAccount}
-                </Link>
-              </Button>
             </CardContent>
           </Card>
         </div>
       </main>
     </AuthRedirectWrapper>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen w-full items-center justify-center bg-gradient-to-br from-slate-50 to-gray-100">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    }>
+      <HomePageContent />
+    </Suspense>
   );
 }

@@ -34,12 +34,26 @@ const formSchema = z.object({
   }),
 });
 
-export function AuthorityLoginForm() {
+export function AuthorityLoginForm({ isFaculty: propIsFaculty }: { isFaculty?: boolean }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
   const { translations } = useContext(LanguageContext);
-  const isFaculty = searchParams.get('role') === 'faculty';
+  
+  // Check if we're in faculty mode from props, URL params, or current path
+  const isFaculty = propIsFaculty !== undefined ? propIsFaculty : (
+    searchParams.get('role') === 'faculty' || 
+    (typeof window !== "undefined" && window.location.pathname.includes('/faculty'))
+  );
+
+  // Auto-set faculty role in URL if coming from faculty route
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.location.pathname.includes('/faculty') && !searchParams.get('role')) {
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.set('role', 'faculty');
+      router.replace(newUrl.toString());
+    }
+  }, [router, searchParams]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -106,7 +120,7 @@ export function AuthorityLoginForm() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)}>
-        <CardContent className="space-y-5 pt-4">
+        <CardContent className="space-y-6 pt-4">
           <FormField control={form.control} name="email" render={({ field }) => (
             <FormItem>
               <FormLabel className="text-sm font-medium text-gray-700">{translations.loginForm.email}</FormLabel>
@@ -117,7 +131,7 @@ export function AuthorityLoginForm() {
                     placeholder="authority@example.com" 
                     type="email" 
                     {...field} 
-                    className="pl-10 h-10 border-gray-200 focus:border-blue-500 focus:ring-blue-500 rounded-md transition-all duration-200" 
+                    className="pl-10 h-11 border-gray-200 focus:border-blue-400 focus:ring-blue-400/20 rounded-lg transition-all duration-200 bg-gray-50/50 focus:bg-white" 
                   />
                 </div>
               </FormControl>
@@ -134,7 +148,7 @@ export function AuthorityLoginForm() {
                     type="password" 
                     placeholder="••••••••" 
                     {...field} 
-                    className="pl-10 h-10 border-gray-200 focus:border-blue-500 focus:ring-blue-500 rounded-md transition-all duration-200" 
+                    className="pl-10 h-11 border-gray-200 focus:border-blue-400 focus:ring-blue-400/20 rounded-lg transition-all duration-200 bg-gray-50/50 focus:bg-white" 
                   />
                 </div>
               </FormControl>
@@ -142,15 +156,15 @@ export function AuthorityLoginForm() {
             </FormItem>
           )} />
           <div className="flex justify-end">
-            <Button variant="link" asChild className="p-0 h-auto text-sm text-blue-600 hover:text-blue-800 font-medium">
+            <Button variant="link" asChild className="p-0 h-auto text-sm text-blue-600 hover:text-blue-700 font-medium">
               <Link href={`/forgot-password/authority${isFaculty ? '?role=faculty' : ''}`}>{translations.loginForm.forgotPassword}</Link>
             </Button>
           </div>
         </CardContent>
-        <CardFooter className="flex-col gap-3 pb-6">
+        <CardFooter className="flex-col gap-4 pb-6">
           <Button 
             type="submit" 
-            className="w-full h-10 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md transition-all duration-200"
+            className="w-full h-11 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
           >
             {translations.loginForm.login}
           </Button>
@@ -159,13 +173,13 @@ export function AuthorityLoginForm() {
               <span className="w-full border-t border-gray-200" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-white px-2 text-gray-500">Or continue with</span>
+              <span className="bg-white px-3 text-gray-500 font-medium">Or continue with</span>
             </div>
           </div>
           <Button 
             type="button" 
             variant="outline" 
-            className="w-full h-10 border-gray-200 hover:bg-gray-50 hover:border-gray-300 rounded-md font-medium transition-all duration-200" 
+            className="w-full h-11 border-gray-200 hover:bg-gray-50 hover:border-gray-300 rounded-lg font-medium transition-all duration-200 shadow-sm" 
             onClick={handleGoogleSignIn}
           >
             <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
@@ -178,7 +192,7 @@ export function AuthorityLoginForm() {
           </Button>
           <p className="text-sm text-gray-600 text-center">
             {translations.loginForm.noAccount}{" "}
-            <Button variant="link" asChild className="p-0 h-auto text-blue-600 hover:text-blue-800 font-medium">
+            <Button variant="link" asChild className="p-0 h-auto text-blue-600 hover:text-blue-700 font-medium">
               <Link href={`/register/authority${isFaculty ? '?role=faculty' : ''}`}>{translations.loginForm.registerHere}</Link>
             </Button>
           </p>
