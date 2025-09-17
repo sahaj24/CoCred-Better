@@ -49,6 +49,7 @@ import {
 } from "lucide-react";
 import { getAllUserProfiles, getEvents, removeEvent } from "@/lib/file-store";
 import type { UserProfile, AppEvent, SupabaseUserProfile } from "@/lib/types";
+import { getPendingCertificates, getCertificateStats, updateCertificateStatus } from "@/lib/faculty-certificates";
 import { LanguageContext } from "@/lib/language-context";
 import { format } from "date-fns";
 import {
@@ -83,6 +84,8 @@ export default function AuthorityDashboard() {
   const [events, setEvents] = useState<AppEvent[]>([]);
   const [eventToDelete, setEventToDelete] = useState<AppEvent | null>(null);
   const [userProfile, setUserProfile] = useState<SupabaseUserProfile | null>(null);
+  const [pendingCertificates, setPendingCertificates] = useState<any[]>([]);
+  const [certificateStats, setCertificateStats] = useState({ pending: 0, approved: 0, rejected: 0, total: 0 });
   const { translations } = useContext(LanguageContext);
   const { toast } = useToast();
   const { user } = useAuth();
@@ -90,7 +93,38 @@ export default function AuthorityDashboard() {
   useEffect(() => {
     setStudents(getAllUserProfiles());
     setEvents(getEvents());
+    loadCertificateData();
   }, []);
+
+  const loadCertificateData = async () => {
+    try {
+      const [certificates, stats] = await Promise.all([
+        getPendingCertificates(),
+        getCertificateStats()
+      ]);
+      setPendingCertificates(certificates);
+      setCertificateStats(stats);
+    } catch (error) {
+      console.error('Error loading certificate data:', error);
+    }
+  };
+
+  const handleCertificateAction = async (certificateId: string, status: 'approved' | 'rejected', feedback?: string) => {
+    try {
+      await updateCertificateStatus(certificateId, status, feedback);
+      toast({
+        title: status === 'approved' ? 'Certificate Approved' : 'Certificate Rejected',
+        description: `Certificate has been ${status} successfully.`
+      });
+      loadCertificateData(); // Refresh data
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to update certificate status.',
+        variant: 'destructive'
+      });
+    }
+  };
 
   // Fetch user profile to get authority type and permissions
   useEffect(() => {
@@ -224,8 +258,8 @@ export default function AuthorityDashboard() {
         <div className="bg-white rounded-xl p-6 border shadow-sm">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Recent Activity</p>
-              <p className="text-2xl font-semibold mt-1">24</p>
+              <p className="text-sm font-medium text-gray-600">Pending Certificates</p>
+              <p className="text-2xl font-semibold mt-1">{certificateStats.pending}</p>
             </div>
             <div className="h-10 w-10 bg-purple-50 rounded-lg flex items-center justify-center">
               <Clock className="h-5 w-5 text-purple-600" />
@@ -236,8 +270,8 @@ export default function AuthorityDashboard() {
         <div className="bg-white rounded-xl p-6 border shadow-sm">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Faculty Members</p>
-              <p className="text-2xl font-semibold mt-1">12</p>
+              <p className="text-sm font-medium text-gray-600">Total Certificates</p>
+              <p className="text-2xl font-semibold mt-1">{certificateStats.total}</p>
             </div>
             <div className="h-10 w-10 bg-orange-50 rounded-lg flex items-center justify-center">
               <UserCheck className="h-5 w-5 text-orange-600" />
@@ -319,20 +353,19 @@ export default function AuthorityDashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {[
-                { action: "Certificate approved", item: "John Doe - Web Development", time: "2 hours ago" },
-                { action: "Event created", item: "AI Workshop Series", time: "1 day ago" },
-                { action: "Student registered", item: "Jane Smith", time: "2 days ago" }
-              ].map((activity, index) => (
-                <div key={index} className="flex items-center space-x-3 p-3 bg-muted/30 rounded-lg">
-                  <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
+              {pendingCertificates.slice(0, 3).map((cert) => (
+                <div key={cert.id} className="flex items-center space-x-3 p-3 bg-muted/30 rounded-lg">
+                  <Clock className="h-4 w-4 text-orange-600 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium">{activity.action}</p>
-                    <p className="text-xs text-muted-foreground">{activity.item}</p>
+                    <p className="text-sm font-medium">Certificate pending review</p>
+                    <p className="text-xs text-muted-foreground">{cert.student_name} - {cert.name}</p>
                   </div>
-                  <span className="text-xs text-muted-foreground">{activity.time}</span>
+                  <span className="text-xs text-muted-foreground">{new Date(cert.date).toLocaleDateString()}</span>
                 </div>
               ))}
+              {pendingCertificates.length === 0 && (
+                <p className="text-sm text-muted-foreground text-center py-4">No pending certificates</p>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -575,94 +608,98 @@ export default function AuthorityDashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {[
-                { student: "Aarav Sharma", activity: "Web Development Workshop", time: "2 hours ago", status: "pending" },
-                { student: "Priya Patel", activity: "AI/ML Bootcamp", time: "4 hours ago", status: "approved" },
-                { student: "Rahul Kumar", activity: "Data Science Course", time: "6 hours ago", status: "under_review" }
-              ].map((submission, index) => (
-                <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+              {pendingCertificates.map((cert) => (
+                <div key={cert.id} className="flex items-center justify-between p-3 border rounded-lg">
                   <div>
-                    <p className="font-medium">{submission.student}</p>
-                    <p className="text-sm text-muted-foreground">{submission.activity}</p>
-                    <p className="text-xs text-muted-foreground">{submission.time}</p>
+                    <p className="font-medium">{cert.student_name}</p>
+                    <p className="text-sm text-muted-foreground">{cert.name}</p>
+                    <p className="text-xs text-muted-foreground">{new Date(cert.date).toLocaleDateString()}</p>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Badge variant={submission.status === 'approved' ? 'default' : submission.status === 'pending' ? 'secondary' : 'outline'}>
-                      {submission.status.replace('_', ' ')}
-                    </Badge>
+                    <Badge variant="secondary">pending</Badge>
                     
-                    {submission.status === 'pending' && (
-                      <>
-                        <Modal>
-                          <ModalTrigger asChild>
-                            <Button size="sm" variant="outline" className="text-green-600 border-green-200 hover:bg-green-50">
-                              <Check className="h-3 w-3 mr-1" />
-                              Approve
-                            </Button>
-                          </ModalTrigger>
-                          <ModalContent className="sm:max-w-[425px]">
-                            <ModalHeader>
-                              <ModalTitle>Approve Submission</ModalTitle>
-                              <ModalDescription>
-                                Approve {submission.student}'s submission for {submission.activity}
-                              </ModalDescription>
-                            </ModalHeader>
-                            <div className="grid gap-4 py-4">
-                              <div className="grid grid-cols-4 items-center gap-4">
-                                <Label htmlFor="feedback" className="text-right">
-                                  Feedback
-                                </Label>
-                                <Textarea 
-                                  id="feedback"
-                                  placeholder="Optional feedback for the student..."
-                                  className="col-span-3"
-                                />
-                              </div>
-                            </div>
-                            <ModalFooter>
-                              <Button type="submit" className="bg-[#2161FF] hover:bg-blue-700">
-                                Approve Submission
-                              </Button>
-                            </ModalFooter>
-                          </ModalContent>
-                        </Modal>
+                    <Modal>
+                      <ModalTrigger asChild>
+                        <Button size="sm" variant="outline" className="text-green-600 border-green-200 hover:bg-green-50">
+                          <Check className="h-3 w-3 mr-1" />
+                          Approve
+                        </Button>
+                      </ModalTrigger>
+                      <ModalContent className="sm:max-w-[425px]">
+                        <ModalHeader>
+                          <ModalTitle>Approve Certificate</ModalTitle>
+                          <ModalDescription>
+                            Approve {cert.student_name}'s certificate for {cert.name}
+                          </ModalDescription>
+                        </ModalHeader>
+                        <div className="grid gap-4 py-4">
+                          <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor={`feedback-${cert.id}`} className="text-right">
+                              Feedback
+                            </Label>
+                            <Textarea 
+                              id={`feedback-${cert.id}`}
+                              placeholder="Optional feedback for the student..."
+                              className="col-span-3"
+                            />
+                          </div>
+                        </div>
+                        <ModalFooter>
+                          <Button 
+                            type="submit" 
+                            className="bg-[#2161FF] hover:bg-blue-700"
+                            onClick={() => {
+                              const feedback = (document.getElementById(`feedback-${cert.id}`) as HTMLTextAreaElement)?.value;
+                              handleCertificateAction(cert.id, 'approved', feedback);
+                            }}
+                          >
+                            Approve Certificate
+                          </Button>
+                        </ModalFooter>
+                      </ModalContent>
+                    </Modal>
 
-                        <Modal>
-                          <ModalTrigger asChild>
-                            <Button size="sm" variant="outline" className="text-red-600 border-red-200 hover:bg-red-50">
-                              <X className="h-3 w-3 mr-1" />
-                              Reject
-                            </Button>
-                          </ModalTrigger>
-                          <ModalContent className="sm:max-w-[425px]">
-                            <ModalHeader>
-                              <ModalTitle>Reject Submission</ModalTitle>
-                              <ModalDescription>
-                                Reject {submission.student}'s submission for {submission.activity}
-                              </ModalDescription>
-                            </ModalHeader>
-                            <div className="grid gap-4 py-4">
-                              <div className="grid grid-cols-4 items-center gap-4">
-                                <Label htmlFor="reason" className="text-right">
-                                  Reason
-                                </Label>
-                                <Textarea 
-                                  id="reason"
-                                  placeholder="Please provide a reason for rejection..."
-                                  className="col-span-3"
-                                  required
-                                />
-                              </div>
-                            </div>
-                            <ModalFooter>
-                              <Button type="submit" variant="destructive">
-                                Reject Submission
-                              </Button>
-                            </ModalFooter>
-                          </ModalContent>
-                        </Modal>
-                      </>
-                    )}
+                    <Modal>
+                      <ModalTrigger asChild>
+                        <Button size="sm" variant="outline" className="text-red-600 border-red-200 hover:bg-red-50">
+                          <X className="h-3 w-3 mr-1" />
+                          Reject
+                        </Button>
+                      </ModalTrigger>
+                      <ModalContent className="sm:max-w-[425px]">
+                        <ModalHeader>
+                          <ModalTitle>Reject Certificate</ModalTitle>
+                          <ModalDescription>
+                            Reject {cert.student_name}'s certificate for {cert.name}
+                          </ModalDescription>
+                        </ModalHeader>
+                        <div className="grid gap-4 py-4">
+                          <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor={`reason-${cert.id}`} className="text-right">
+                              Reason
+                            </Label>
+                            <Textarea 
+                              id={`reason-${cert.id}`}
+                              placeholder="Please provide a reason for rejection..."
+                              className="col-span-3"
+                              required
+                            />
+                          </div>
+                        </div>
+                        <ModalFooter>
+                          <Button 
+                            type="submit" 
+                            variant="destructive"
+                            onClick={() => {
+                              const reason = (document.getElementById(`reason-${cert.id}`) as HTMLTextAreaElement)?.value;
+                              if (reason) handleCertificateAction(cert.id, 'rejected', reason);
+                            }}
+                          >
+                            Reject Certificate
+                          </Button>
+                        </ModalFooter>
+                      </ModalContent>
+                    </Modal>
                     
                     <Button size="sm" variant="outline">
                       <Eye className="h-3 w-3 mr-1" />
@@ -671,6 +708,9 @@ export default function AuthorityDashboard() {
                   </div>
                 </div>
               ))}
+              {pendingCertificates.length === 0 && (
+                <p className="text-sm text-muted-foreground text-center py-4">No pending certificates</p>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -682,16 +722,16 @@ export default function AuthorityDashboard() {
           <CardContent>
             <div className="space-y-4">
               <div className="flex justify-between">
-                <span className="text-sm">Today</span>
-                <span className="font-medium">12</span>
+                <span className="text-sm">Pending</span>
+                <span className="font-medium">{certificateStats.pending}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-sm">This Week</span>
-                <span className="font-medium">47</span>
+                <span className="text-sm">Approved</span>
+                <span className="font-medium">{certificateStats.approved}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-sm">Pending Review</span>
-                <span className="font-medium">8</span>
+                <span className="text-sm">Rejected</span>
+                <span className="font-medium">{certificateStats.rejected}</span>
               </div>
             </div>
           </CardContent>

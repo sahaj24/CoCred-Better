@@ -448,7 +448,7 @@ function StudentDashboardContent() {
                 <CardContent>
                   <div className="space-y-4">
                     {/* Quick Stats Row */}
-                    <div className="grid grid-cols-3 md:grid-cols-3 gap-4 mb-6">
+                    <div className="grid grid-cols-3 gap-4 mb-6">
                       <div className="bg-slate-50 p-3 rounded-lg border border-gray-200">
                         <div className="flex items-center gap-2">
                           <Award className="h-4 w-4 text-blue-600" />
@@ -481,6 +481,21 @@ function StudentDashboardContent() {
                     {/* Recent Activities List */}
                     <div className="space-y-3">
                       <h4 className="font-medium text-gray-900 mb-3">Latest Submissions</h4>
+                      
+                      {certificates.slice(0, 5).map(cert => (
+                        <div key={cert.id} className="flex items-start gap-4 p-4 bg-white border border-gray-200 rounded-lg hover:shadow-sm transition-shadow">
+                          <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                            {getDocumentIcon(cert.type)}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between">
+                              <h5 className="font-medium text-gray-900 truncate">{cert.name}</h5>
+                              {getStatusBadge(cert.status)}
+                            </div>
+                            <p className="text-xs text-gray-500 mt-2">Uploaded on {new Date(cert.date).toLocaleDateString()}</p>
+                          </div>
+                        </div>
+                      ))}
                       
                       {/* Quick Action to Add New Activity */}
                       <AddActivityModal>

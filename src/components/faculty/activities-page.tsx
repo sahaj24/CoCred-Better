@@ -1,15 +1,19 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '@/lib/auth-context';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { getPendingCertificates, updateCertificateStatus } from '@/lib/faculty-certificates';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/lib/supabase';
+import Link from 'next/link';
 import { 
   Search, 
-  Filter, 
   CheckCircle, 
   XCircle, 
   Clock, 
@@ -45,98 +49,6 @@ interface ActivitySubmission {
   category: string;
 }
 
-const mockActivities: ActivitySubmission[] = [
-  {
-    id: '1',
-    title: 'Web Development Workshop Completion',
-    description: 'Successfully completed 40-hour intensive web development workshop covering HTML, CSS, JavaScript, and React fundamentals.',
-    student: {
-      name: 'John Doe',
-      id: 'CS2021001',
-      department: 'Computer Science',
-      avatar: ''
-    },
-    type: 'workshop',
-    status: 'pending',
-    submittedDate: '2025-01-15',
-    eventDate: '2025-01-10',
-    documents: ['certificate.pdf', 'project_screenshots.jpg'],
-    priority: 'high',
-    category: 'Technical Skills'
-  },
-  {
-    id: '2',
-    title: 'AI/ML Research Project',
-    description: 'Developed machine learning model for predictive analytics using Python and TensorFlow.',
-    student: {
-      name: 'Jane Smith',
-      id: 'CS2021002',
-      department: 'Computer Science',
-      avatar: ''
-    },
-    type: 'project',
-    status: 'under_review',
-    submittedDate: '2025-01-14',
-    eventDate: '2025-01-05',
-    documents: ['project_report.pdf', 'code_repository.zip', 'presentation.pptx'],
-    priority: 'medium',
-    category: 'Research'
-  },
-  {
-    id: '3',
-    title: 'Leadership Training Certificate',
-    description: 'Completed leadership development program focusing on team management and communication skills.',
-    student: {
-      name: 'Mike Johnson',
-      id: 'BM2021003',
-      department: 'Business Management',
-      avatar: ''
-    },
-    type: 'certificate',
-    status: 'approved',
-    submittedDate: '2025-01-12',
-    eventDate: '2025-01-08',
-    documents: ['certificate.pdf'],
-    priority: 'low',
-    category: 'Soft Skills'
-  },
-  {
-    id: '4',
-    title: 'Summer Internship at Tech Corp',
-    description: 'Completed 3-month internship in software development department, contributing to multiple projects.',
-    student: {
-      name: 'Sarah Wilson',
-      id: 'CS2021004',
-      department: 'Computer Science',
-      avatar: ''
-    },
-    type: 'internship',
-    status: 'rejected',
-    submittedDate: '2025-01-10',
-    eventDate: '2024-08-15',
-    documents: ['internship_letter.pdf', 'performance_review.pdf'],
-    priority: 'high',
-    category: 'Work Experience'
-  },
-  {
-    id: '5',
-    title: 'National Coding Competition',
-    description: 'Participated in national-level coding competition and secured 3rd position in algorithms category.',
-    student: {
-      name: 'David Brown',
-      id: 'CS2021005',
-      department: 'Computer Science',
-      avatar: ''
-    },
-    type: 'competition',
-    status: 'pending',
-    submittedDate: '2025-01-09',
-    eventDate: '2025-01-01',
-    documents: ['competition_certificate.pdf', 'solution_code.zip'],
-    priority: 'high',
-    category: 'Competition'
-  }
-];
 
 export function FacultyActivitiesPage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -144,8 +56,146 @@ export function FacultyActivitiesPage() {
   const [typeFilter, setTypeFilter] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');
   const [selectedActivities, setSelectedActivities] = useState<string[]>([]);
+  const [activities, setActivities] = useState<ActivitySubmission[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
 
-  const filteredActivities = mockActivities.filter(activity => {
+  // Auth context
+  const { user, loading: authLoading } = useAuth();
+
+  // Fetch activities only after auth state is resolved and user exists
+  useEffect(() => {
+    if (!authLoading && user) {
+      loadActivities();
+    }
+  }, [authLoading, user]);
+
+  const loadActivities = async () => {
+    try {
+      setLoading(true);
+      console.log('Loading activities from database...');
+      
+      // Get faculty class_code first
+      const { data: facultyRow, error: facultyErr } = await supabase
+        .from('faculty')
+        .select('class_code')
+        .eq('user_id', user?.id)
+        .maybeSingle();
+
+      if (facultyErr) {
+        throw new Error(`Faculty lookup failed: ${facultyErr.message}`);
+      }
+
+      if (!facultyRow || !facultyRow.class_code) {
+        throw new Error('No class code found for current faculty user.');
+      }
+
+      const classCode = facultyRow.class_code;
+      console.log('Faculty class_code:', classCode);
+
+      // Fetch certificates belonging to this class code (select * avoids joins that may violate RLS)
+      const { data: certificates, error } = await supabase
+        .from('certificates')
+        .select('*')
+        .eq('class_code', classCode)
+        .order('uploaded_at', { ascending: false });
+      
+      console.log('Direct query result:', { certificates, error });
+      
+      if (error) {
+        console.error('Supabase error:', error);
+        // Check if it's an auth error
+        if (error.message?.includes('JWT') || error.message?.includes('auth')) {
+          throw new Error('Authentication required. Please log in.');
+        }
+        throw new Error(`Database error: ${error.message}`);
+      }
+      
+      if (!certificates || certificates.length === 0) {
+        console.log('No certificates found in database');
+        setActivities([]);
+        return;
+      }
+      
+      console.log(`Found ${certificates.length} certificates`);
+      
+      // Convert certificates to activity format
+      const convertedActivities: ActivitySubmission[] = certificates.map((cert: any) => ({
+        id: cert.id,
+        title: cert.issued_name || cert.name || 'Certificate',
+        description: cert.description || 'Student certificate submission',
+        student: {
+          name: cert.student_name || 'Unknown Student',
+          id: cert.student_id?.slice(0, 8) || 'N/A',
+          department: 'Unknown',
+          avatar: ''
+        },
+        type: 'certificate',
+        status: (cert.status as any) || 'pending',
+        submittedDate: cert.uploaded_at || cert.created_at || new Date().toISOString(),
+        eventDate: cert.uploaded_at || cert.created_at || new Date().toISOString(),
+        documents: cert.public_url ? [cert.public_url] : cert.file_url ? [cert.file_url] : [],
+        priority: 'medium' as any,
+        category: 'Academic'
+      }));
+      
+      console.log('Converted activities:', convertedActivities);
+      setActivities(convertedActivities);
+    } catch (error) {
+      console.error('Error loading activities:', error);
+      
+      let errorMessage = 'Unknown error';
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      
+      toast({
+        title: 'Database Error',
+        description: `Failed to load activities: ${errorMessage}`,
+        variant: 'destructive'
+      });
+      
+      setActivities([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleApprove = async (activityId: string) => {
+    try {
+      await updateCertificateStatus(activityId, 'approved');
+      toast({
+        title: 'Success',
+        description: 'Activity approved successfully'
+      });
+      loadActivities(); // Refresh
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to approve activity',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  const handleReject = async (activityId: string) => {
+    try {
+      await updateCertificateStatus(activityId, 'rejected', 'Activity rejected by faculty');
+      toast({
+        title: 'Success',
+        description: 'Activity rejected successfully'
+      });
+      loadActivities(); // Refresh
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to reject activity',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  const filteredActivities = activities.filter(activity => {
     const matchesSearch = activity.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          activity.student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          activity.description.toLowerCase().includes(searchTerm.toLowerCase());
@@ -191,6 +241,31 @@ export function FacultyActivitiesPage() {
     console.log(`Performing ${action} on activities:`, selectedActivities);
   };
 
+  // Handle auth loading state
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  // If no user session, prompt login
+  if (!user) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
+        <AlertCircle className="h-12 w-12 text-red-600" />
+        <h2 className="text-xl font-semibold">Login Required</h2>
+        <p className="text-gray-600 max-w-sm">
+          You must be logged in as faculty to view and manage student activities. Please sign in using your faculty account.
+        </p>
+        <Button className="bg-[#2161FF] hover:bg-blue-700 text-white" asChild>
+          <Link href="/login/authority">Go to Login</Link>
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-7xl mx-auto space-y-6">
       {/* Header */}
@@ -222,7 +297,7 @@ export function FacultyActivitiesPage() {
               <div>
                 <p className="text-sm font-medium text-gray-600">Pending Review</p>
                 <p className="text-2xl font-bold text-orange-600 mt-1">
-                  {mockActivities.filter(a => a.status === 'pending').length}
+                  {activities.filter(a => a.status === 'pending').length}
                 </p>
               </div>
               <Clock className="h-8 w-8 text-orange-600" />
@@ -236,7 +311,7 @@ export function FacultyActivitiesPage() {
               <div>
                 <p className="text-sm font-medium text-gray-600">Approved</p>
                 <p className="text-2xl font-bold text-green-600 mt-1">
-                  {mockActivities.filter(a => a.status === 'approved').length}
+                  {activities.filter(a => a.status === 'approved').length}
                 </p>
               </div>
               <CheckCircle className="h-8 w-8 text-green-600" />
@@ -250,7 +325,7 @@ export function FacultyActivitiesPage() {
               <div>
                 <p className="text-sm font-medium text-gray-600">Under Review</p>
                 <p className="text-2xl font-bold text-blue-600 mt-1">
-                  {mockActivities.filter(a => a.status === 'under_review').length}
+                  {activities.filter(a => a.status === 'under_review').length}
                 </p>
               </div>
               <AlertCircle className="h-8 w-8 text-blue-600" />
@@ -264,7 +339,7 @@ export function FacultyActivitiesPage() {
               <div>
                 <p className="text-sm font-medium text-gray-600">High Priority</p>
                 <p className="text-2xl font-bold text-red-600 mt-1">
-                  {mockActivities.filter(a => a.priority === 'high').length}
+                  {activities.filter(a => a.priority === 'high').length}
                 </p>
               </div>
               <AlertCircle className="h-8 w-8 text-red-600" />
@@ -343,7 +418,16 @@ export function FacultyActivitiesPage() {
         </TabsList>
 
         <TabsContent value="all" className="space-y-4">
-          {filteredActivities.map((activity) => (
+          {loading ? (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading activities...</p>
+            </div>
+          ) : filteredActivities.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-gray-500">No activities found</p>
+            </div>
+          ) : filteredActivities.map((activity) => (
             <Card key={activity.id} className="bg-white hover:shadow-md transition-shadow">
               <CardContent className="p-6">
                 <div className="flex items-start justify-between">
@@ -416,11 +500,19 @@ export function FacultyActivitiesPage() {
                           </Button>
                           {activity.status === 'pending' && (
                             <>
-                              <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white">
+                              <Button 
+                                size="sm" 
+                                className="bg-green-600 hover:bg-green-700 text-white"
+                                onClick={() => handleApprove(activity.id)}
+                              >
                                 <CheckCircle className="h-4 w-4 mr-1" />
                                 Approve
                               </Button>
-                              <Button variant="destructive" size="sm">
+                              <Button 
+                                variant="destructive" 
+                                size="sm"
+                                onClick={() => handleReject(activity.id)}
+                              >
                                 <XCircle className="h-4 w-4 mr-1" />
                                 Reject
                               </Button>

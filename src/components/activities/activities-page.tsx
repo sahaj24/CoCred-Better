@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -26,106 +26,34 @@ import {
   BarChart3
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
+import { getStudentActivities, getActivityStats, type Activity, type ActivityStatus, type ActivityType, type ActivityCategory } from '@/lib/student-activities';
 
-// Types
-type ActivityStatus = "pending" | "approved" | "rejected";
-type ActivityType = "certificate" | "internship" | "project" | "workshop";
-type ActivityCategory = "Academic" | "Technical" | "Leadership" | "Sports" | "Cultural" | "Social";
-
-interface Activity {
-  id: string;
-  title: string;
-  type: ActivityType;
-  category: ActivityCategory;
-  description: string;
-  status: ActivityStatus;
-  date: string;
-  organization?: string;
-  duration?: string;
-  skills?: string[];
-}
 
 export function ActivitiesPage() {
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<ActivityStatus | "all">("all");
   const [categoryFilter, setCategoryFilter] = useState<ActivityCategory | "all">("all");
+  const [activities, setActivities] = useState<Activity[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Mock activities data - in real app this would come from your backend
-  const activities: Activity[] = [
-    {
-      id: "1",
-      title: "JavaScript Certification",
-      type: "certificate",
-      category: "Technical",
-      description: "Comprehensive certification in modern JavaScript development including ES6+ features and advanced concepts.",
-      status: "approved",
-      date: "2025-09-01",
-      organization: "TechCorp Academy",
-      duration: "3 months",
-      skills: ["JavaScript", "ES6+", "Web Development"]
-    },
-    {
-      id: "2",
-      title: "React Fundamentals Certificate",
-      type: "certificate",
-      category: "Technical",
-      description: "Frontend development certification focusing on React fundamentals and modern practices.",
-      status: "pending",
-      date: "2025-09-10",
-      organization: "Frontend Bootcamp",
-      duration: "2 months",
-      skills: ["React", "JSX", "State Management"]
-    },
-    {
-      id: "3",
-      title: "Student Council President",
-      type: "workshop",
-      category: "Leadership",
-      description: "Led student council initiatives and organized campus events for academic year 2024-25.",
-      status: "approved",
-      date: "2025-08-28",
-      organization: "State University",
-      duration: "1 year",
-      skills: ["Leadership", "Event Management", "Public Speaking"]
-    },
-    {
-      id: "4",
-      title: "Machine Learning Project",
-      type: "project",
-      category: "Technical",
-      description: "Developed a machine learning model for predicting student performance using various algorithms.",
-      status: "approved",
-      date: "2025-08-25",
-      organization: "University Research Lab",
-      duration: "4 months",
-      skills: ["Python", "Machine Learning", "Data Analysis"]
-    },
-    {
-      id: "5",
-      title: "Summer Software Development Internship",
-      type: "internship",
-      category: "Technical",
-      description: "Three-month internship focused on full-stack web development and agile methodologies.",
-      status: "approved",
-      date: "2025-08-20",
-      organization: "TechStart Inc.",
-      duration: "3 months",
-      skills: ["Full-stack Development", "Agile", "Team Collaboration"]
-    },
-    {
-      id: "6",
-      title: "Cultural Fest Organizer",
-      type: "workshop",
-      category: "Cultural",
-      description: "Organized annual cultural festival with 2000+ participants and 50+ events.",
-      status: "pending",
-      date: "2025-07-15",
-      organization: "University Cultural Committee",
-      duration: "6 months",
-      skills: ["Event Planning", "Team Management", "Creative Direction"]
+  useEffect(() => {
+    if (user?.id) {
+      loadActivities();
     }
-  ];
+  }, [user]);
+
+  const loadActivities = async () => {
+    try {
+      setLoading(true);
+      const studentActivities = await getStudentActivities(user?.id || '');
+      setActivities(studentActivities);
+    } catch (error) {
+      console.error('Error loading activities:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getStatusBadge = (status: ActivityStatus) => {
     const variants = {
@@ -184,6 +112,19 @@ export function ActivitiesPage() {
     pending: activities.filter(a => a.status === "pending").length,
     rejected: activities.filter(a => a.status === "rejected").length
   };
+
+  if (loading) {
+    return (
+      <div className="max-w-7xl mx-auto space-y-6">
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading activities...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto space-y-6">
@@ -319,7 +260,7 @@ export function ActivitiesPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredActivities.map((activity) => (
+                  {filteredActivities.length > 0 ? filteredActivities.map((activity) => (
                     <TableRow key={activity.id} className="hover:bg-white border-b border-gray-100">
                       <TableCell>
                         <div className="flex items-center space-x-3">
@@ -352,7 +293,13 @@ export function ActivitiesPage() {
                         </div>
                       </TableCell>
                     </TableRow>
-                  ))}
+                  )) : (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center py-8 text-gray-500">
+                        No activities found. Add your first activity to get started!
+                      </TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
             </CardContent>
@@ -371,7 +318,7 @@ export function ActivitiesPage() {
             </CardHeader>
             <CardContent>
               <div className="border-l-2 border-gray-200 pl-6 space-y-8 relative">
-                {activities
+                {activities.length > 0 ? activities
                   .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
                   .map((activity) => (
                     <div key={activity.id} className="relative">
@@ -400,7 +347,13 @@ export function ActivitiesPage() {
                         <p className="text-sm text-gray-700 mt-2">{activity.description}</p>
                       </div>
                     </div>
-                  ))}
+                  )) : (
+                    <div className="text-center py-8 text-gray-500">
+                      <Clock className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                      <p>No activities to display in timeline view.</p>
+                      <p className="text-sm mt-1">Add your first activity to see it here!</p>
+                    </div>
+                  )}
               </div>
             </CardContent>
           </Card>
@@ -409,7 +362,7 @@ export function ActivitiesPage() {
         {/* Categories Tab */}
         <TabsContent value="categories">
           <div className="space-y-6">
-            {Object.entries(activitiesByCategory).map(([category, categoryActivities]) => (
+            {Object.keys(activitiesByCategory).length > 0 ? Object.entries(activitiesByCategory).map(([category, categoryActivities]) => (
               <Card key={category}>
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
@@ -439,7 +392,15 @@ export function ActivitiesPage() {
                   </div>
                 </CardContent>
               </Card>
-            ))}
+            )) : (
+              <Card>
+                <CardContent className="text-center py-12">
+                  <BarChart3 className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                  <p className="text-gray-500">No activities found in any category.</p>
+                  <p className="text-sm text-gray-400 mt-1">Start by adding your first activity!</p>
+                </CardContent>
+              </Card>
+            )}
           </div>
         </TabsContent>
       </Tabs>
