@@ -1,7 +1,7 @@
 "use client";
 
 import { AuthorityLoginForm } from "@/components/auth/authority-login-form";
-import { useEffect } from "react";
+import { useEffect, Suspense } from "react";
 import { useRouter } from "next/navigation";
 
 export default function FacultyLoginPage() {
@@ -18,7 +18,9 @@ export default function FacultyLoginPage() {
     <div className="flex min-h-screen items-center justify-center p-4 bg-background">
       <div className="max-w-md w-full bg-white rounded-lg shadow-sm p-6">
         <h1 className="text-2xl font-bold text-center mb-4">Faculty Login</h1>
-        <AuthorityLoginForm />
+        <Suspense fallback={<div>Loading...</div>}>
+          <AuthorityLoginForm />
+        </Suspense>
       </div>
     </div>
   );

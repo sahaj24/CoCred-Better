@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useContext } from "react";
+import { useContext, Suspense } from "react";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { AuthorityLoginForm } from "@/components/auth/authority-login-form";
 import { AuthRedirectWrapper } from "@/components/auth/auth-redirect-wrapper";
@@ -39,7 +39,9 @@ export default function AuthorityLoginPage() {
               <CardTitle className="font-bold text-2xl text-gray-800 mb-2">{translations.loginPage.authorityLoginTitle}</CardTitle>
               <CardDescription className="text-gray-600 text-sm">{translations.loginPage.authorityLoginDescription}</CardDescription>
             </CardHeader>
-            <AuthorityLoginForm />
+            <Suspense fallback={<div>Loading...</div>}>
+              <AuthorityLoginForm />
+            </Suspense>
           </Card>
         </div>
       </main>
